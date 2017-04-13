@@ -3,22 +3,20 @@ private typealias Stream = String.CharacterView
 private typealias Parser<A> = (Stream) -> (A, Stream)?
 
 private func map<A, B>(_ parser: @escaping Parser<A>, _ transform: @escaping (A) -> B) -> Parser<B> {
-    let newParser: Parser<B> = { stream in
+    return { stream in
         guard let (result, remainder) = parser(stream) else { return nil }
         return (transform(result), remainder)
     }
-    return newParser
 }
 
 private func or<A>(_ leftParser: @escaping Parser<A>, _ rightParser: @escaping Parser<A>) -> Parser<A> {
-    let parser: Parser<A> = { stream in
+    return { stream in
         return leftParser(stream) ?? rightParser(stream)
     }
-    return parser
 }
 
 private func one<A>(of parsers: [Parser<A>]) -> Parser<A> {
-    let parser: Parser<A> = { stream in
+    return { stream in
         for parser in parsers {
             if let x = parser(stream) {
                 return x
@@ -26,11 +24,10 @@ private func one<A>(of parsers: [Parser<A>]) -> Parser<A> {
         }
         return nil
     }
-    return parser
 }
 
 private func many<A>(_ parser: @escaping Parser<A>) -> Parser<[A]> {
-    let parser: Parser<[A]> = { stream in
+    return { stream in
         var result = [A]()
         var remainder = stream
         while let (element, newRemainder) = parser(remainder) {
@@ -39,11 +36,10 @@ private func many<A>(_ parser: @escaping Parser<A>) -> Parser<[A]> {
         }
         return (result, remainder)
     }
-    return parser
 }
 
 private func many1<A>(_ parser: @escaping Parser<A>) -> Parser<[A]> {
-    let parser: Parser<[A]> = { stream in
+    return { stream in
         guard let (element, remainder1) = parser(stream) else { return nil }
         if let (array, remainder2) = many(parser)(remainder1) {
             return ([element] + array, remainder2)
@@ -51,17 +47,15 @@ private func many1<A>(_ parser: @escaping Parser<A>) -> Parser<[A]> {
             return ([element], remainder1)
         }
     }
-    return parser
 }
 
 private func between<A, B, C>(_ a: @escaping Parser<A>, _ b: @escaping Parser<B>, _ c: @escaping Parser<C>) -> Parser<B> {
-    let parser: Parser<B> = { stream in
+    return { stream in
         guard let (_, remainder1) = a(stream) else { return nil }
         guard let (result2, remainder2) = b(remainder1) else { return nil }
         guard let (_, remainder3) = c(remainder2) else { return nil }
         return (result2, remainder3)
     }
-    return parser
 }
 
 private func and<A, B>(_ left: @escaping Parser<A>, _ right: @escaping Parser<B>) -> Parser<(A, B)> {
@@ -98,16 +92,15 @@ private func satisfy(_ condition: @escaping (Character) -> Bool) -> Parser<Chara
 }
 
 private func character(_ character: Character) -> Parser<Character> {
-    let parser: Parser<Character> = { stream in
+    return { stream in
         guard let firstCharacter = stream.first, firstCharacter == character else { return nil }
         return (firstCharacter, stream.dropFirst())
     }
-    return parser
 }
 
 private func word(_ string: String) -> Parser<String> {
     let parsers = string.characters.map({ character($0) })
-    let parser: Parser<String> = { stream in
+    return { stream in
         var characters: [Character] = []
         var remainder = stream
         for parser in parsers {
@@ -117,12 +110,13 @@ private func word(_ string: String) -> Parser<String> {
         }
         return (String(characters), remainder)
     }
-    return parser
 }
 
 // Parsers
 
-private let null: Parser<Value> = map(word("null")) { _ in Value.null }
+private let null: Parser<Value> = {
+    return map(word("null")) { _ in Value.null }
+}()
 
 private let bool: Parser<Value> = {
     let `true` = map(word("true")) { _ in true }
@@ -166,7 +160,9 @@ private let quotedString: Parser<String> = {
     return between(quote, _string, quote)
 }()
 
-private let string: Parser<Value> = map(quotedString) { Value.string($0) }
+private let string: Parser<Value> = {
+    return map(quotedString) { Value.string($0) }
+}()
 
 private var _value: Parser<Value>?
 private let value: Parser<Value> = { stream in
