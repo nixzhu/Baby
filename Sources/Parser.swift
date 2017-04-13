@@ -154,7 +154,21 @@ private let quotedString: Parser<String> = {
         map(word("\\t")) { _ in Character("\t") },
         ]
     )
-    let letter = one(of: [unescapedCharacter, escapedCharacter])
+    let unicodeString: Parser<String> = {
+        let hexDigit = one(of: "0123456789ABCDEFabcdef".characters.map({ character($0) }))
+        return { stream in
+            guard let (_, remainder1) = character("\\")(stream) else { return nil }
+            guard let (_, remainder2) = character("u")(remainder1) else { return nil }
+            guard let (a, remainder3) = hexDigit(remainder2) else { return nil }
+            guard let (b, remainder4) = hexDigit(remainder3) else { return nil }
+            guard let (c, remainder5) = hexDigit(remainder4) else { return nil }
+            guard let (d, remainder6) = hexDigit(remainder5) else { return nil }
+            print(a, b, c, d)
+            return (String([a, b, c, d]), remainder6)
+        }
+    }()
+    let unicodeCharacter = map(unicodeString) { Character(UnicodeScalar(UInt32($0, radix: 16)!)!) }
+    let letter = one(of: [unescapedCharacter, escapedCharacter, unicodeCharacter])
     let _string = map(many1(letter)) { String($0) }
     let quote = character("\"")
     return between(quote, _string, quote)
