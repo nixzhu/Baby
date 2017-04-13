@@ -90,6 +90,13 @@ private func list<A, B>(_ parser: @escaping Parser<A>, _ separator: @escaping Pa
     }
 }
 
+private func satisfy(_ condition: @escaping (Character) -> Bool) -> Parser<Character> {
+    return { stream in
+        guard let firstCharacter = stream.first, condition(firstCharacter) else { return nil }
+        return (firstCharacter, stream.dropFirst())
+    }
+}
+
 private func character(_ character: Character) -> Parser<Character> {
     let parser: Parser<Character> = { stream in
         guard let firstCharacter = stream.first, firstCharacter == character else { return nil }
@@ -139,10 +146,21 @@ private let number: Parser<Value> = {
 }()
 
 private let quotedString: Parser<String> = {
-    let lowercaseParsers = "abcdefghijklmnopqrstuvwxyz".characters.map({ character($0) })
-    let uppercaseParsers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".characters.map({ character($0) })
-    let otherParsers = " \t_-".characters.map({ character($0) }) // TODO: more
-    let letter = one(of: lowercaseParsers + uppercaseParsers + otherParsers)
+    let unescapedCharacter = satisfy({ $0 != "\\" && $0 != "\"" })
+    let escapedCharacter = one(of: [
+        map(word("\\\"")) { _ in Character("\"") },
+        map(word("\\\\")) { _ in Character("\\") },
+        map(word("\\/")) { _ in Character("/") },
+        /*
+        map(word("\\b")) { _ in Character("\b") },
+        map(word("\\f")) { _ in Character("\f") },
+         */
+        map(word("\\n")) { _ in Character("\n") },
+        map(word("\\r")) { _ in Character("\r") },
+        map(word("\\t")) { _ in Character("\t") },
+        ]
+    )
+    let letter = one(of: [unescapedCharacter, escapedCharacter])
     let _string = map(many1(letter)) { String($0) }
     let quote = character("\"")
     return between(quote, _string, quote)
