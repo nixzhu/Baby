@@ -179,10 +179,6 @@ private let quotedString: Parser<String> = {
         map(word("\\\"")) { _ in Character("\"") },
         map(word("\\\\")) { _ in Character("\\") },
         map(word("\\/")) { _ in Character("/") },
-        /*
-        map(word("\\b")) { _ in Character("\b") },
-        map(word("\\f")) { _ in Character("\f") },
-         */
         map(word("\\n")) { _ in Character("\n") },
         map(word("\\r")) { _ in Character("\r") },
         map(word("\\t")) { _ in Character("\t") },
@@ -244,7 +240,9 @@ private let array: Parser<Value> = {
 }()
 
 public func parse(_ input: String) -> (Value, String)? {
-    _value = one(of: [null, bool, number, string, array, object])
+    if _value == nil {
+        _value = one(of: [null, bool, number, string, array, object])
+    }
     guard let (result, remainder) = value(input.characters) else { return nil }
     return (result, String(remainder))
 }
