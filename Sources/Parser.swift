@@ -9,6 +9,16 @@ private func map<A, B>(_ parser: @escaping Parser<A>, _ transform: @escaping (A)
     }
 }
 
+private func optional<A>(_ parser: @escaping Parser<A>) -> Parser<A?> {
+    return { stream in
+        if let (result, remainder) = parser(stream) {
+            return (result, remainder)
+        } else {
+            return (nil, stream)
+        }
+    }
+}
+
 private func or<A>(_ leftParser: @escaping Parser<A>, _ rightParser: @escaping Parser<A>) -> Parser<A> {
     return { stream in
         return leftParser(stream) ?? rightParser(stream)
@@ -63,6 +73,14 @@ private func and<A, B>(_ left: @escaping Parser<A>, _ right: @escaping Parser<B>
         guard let (result1, remainder1) = left(stream) else { return nil }
         guard let (result2, remainder2) = right(remainder1) else { return nil }
         return ((result1, result2), remainder2)
+    }
+}
+
+private func eatLeft<A, B>(_ left: @escaping Parser<A>, _ right: @escaping Parser<B>) -> Parser<B> {
+    return { stream in
+        guard let (_, remainder1) = left(stream) else { return nil }
+        guard let (result2, remainder2) = right(remainder1) else { return nil }
+        return (result2, remainder2)
     }
 }
 
@@ -125,15 +143,31 @@ private let bool: Parser<Value> = {
 }()
 
 private let number: Parser<Value> = {
-    let digitCharacters = "0123456789.-".characters.map { $0 }
-    let digitParsers = digitCharacters.map { character($0) }
-    let digit = one(of: digitParsers)
-    return map(many1(digit)) {
-        let numberString = String($0)
-        if let int = Int(numberString) {
+    let optionalSign = optional(character("-"))
+    let zero = word("0")
+    let digitOneNine = one(of: "123456789".characters.map({ $0 }).map({ character($0) }))
+    let digit = one(of: "0123456789".characters.map({ $0 }).map({ character($0) }))
+    let point = character(".")
+    let e = or(character("e"), character("E"))
+    let optionalPlusMinus = optional(or(character("+"), character("-")))
+    let nonZeroInt = map(and(digitOneNine, many(digit))) { String($0) + String($1) }
+    let intPart = or(zero, nonZeroInt)
+    let fractionPart = map(eatLeft(point, many1(digit))) { String($0) }
+    let exponentPart = map(and(eatLeft(e, optionalPlusMinus), many1(digit))) {
+        ($0.flatMap({ String($0) }) ?? "") + String($1)
+    }
+    let numberString: Parser<String> = map(and(and(and(optionalSign, intPart), optional(fractionPart)), optional(exponentPart))) {
+        let sign = ($0.0.0.0).flatMap({ String($0) }) ?? ""
+        let int = $0.0.0.1
+        let fraction = ($0.0.1).flatMap({ "." + String($0) }) ?? ""
+        let exponent = ($0.1).flatMap({ "e" + String($0) }) ?? ""
+        return sign + int + fraction + exponent
+    }
+    return map(numberString) { string in
+        if let int = Int(string) {
             return Value.number(.int(int))
         } else {
-            let double = Double(numberString)!
+            let double = Double(string)!
             return Value.number(.double(double))
         }
     }
@@ -163,7 +197,6 @@ private let quotedString: Parser<String> = {
             guard let (b, remainder4) = hexDigit(remainder3) else { return nil }
             guard let (c, remainder5) = hexDigit(remainder4) else { return nil }
             guard let (d, remainder6) = hexDigit(remainder5) else { return nil }
-            print(a, b, c, d)
             return (String([a, b, c, d]), remainder6)
         }
     }()
