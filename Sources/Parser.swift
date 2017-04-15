@@ -139,7 +139,7 @@ private let null: Parser<Value> = {
 private let bool: Parser<Value> = {
     let `true` = map(word("true")) { _ in true }
     let `false` = map(word("false")) { _ in false }
-    return map(or(`true`, `false`)) { bool in Value.bool(bool) }
+    return map(or(`true`, `false`)) { bool in Value.bool(value: bool, isRequired: true) }
 }()
 
 private let number: Parser<Value> = {
@@ -165,10 +165,10 @@ private let number: Parser<Value> = {
     }
     return map(numberString) { string in
         if let int = Int(string) {
-            return Value.number(.int(int))
+            return Value.number(value: .int(int), isRequired: true)
         } else {
             let double = Double(string)!
-            return Value.number(.double(double))
+            return Value.number(value: .double(double), isRequired: true)
         }
     }
 }()
@@ -204,7 +204,7 @@ private let quotedString: Parser<String> = {
 }()
 
 private let string: Parser<Value> = {
-    return map(quotedString) { Value.string($0) }
+    return map(quotedString) { Value.string(value: $0, isRequired: true) }
 }()
 
 private var _value: Parser<Value>?
@@ -227,7 +227,7 @@ private let object: Parser<Value> = {
         for (key, value) in $0 {
             dictionary[key] = value
         }
-        return Value.object(dictionary)
+        return Value.object(name: "Root", value: dictionary, isRequired: true)
     }
 }()
 
@@ -236,7 +236,7 @@ private let array: Parser<Value> = {
     let endArray = character("]")
     let comma = character(",")
     let values = list(value, comma)
-    return map(between(beginArray, values, endArray)) { Value.array($0) }
+    return map(between(beginArray, values, endArray)) { Value.array(value: $0, isRequired: true) }
 }()
 
 public func parse(_ input: String) -> (Value, String)? {
