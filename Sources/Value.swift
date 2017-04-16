@@ -256,38 +256,44 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
+    func initialCode(indentation: Indentation, key: String) -> String {
+        let indent = indentation.value
+        var lines: [String] = []
+        switch self {
+        case let .null(optionalValue):
+            if let value = optionalValue {
+                lines.append(value.optionalInitialCode(indentation: indentation.deeper, key: key))
+            } else {
+                lines.append("\(indent)let \(key.propertyName) = json[\"\(key)\"]")
+            }
+        case .bool, .number, .string:
+            lines.append("\(indent)guard let \(key.propertyName) = json[\"\(key)\"] as? \(self.type) else { return nil }")
+        case let .object(name, _):
+            let jsonDictionary = "\(name.propertyName)JSONDictionary"
+            lines.append("\(indent)guard let \(jsonDictionary) = json[\"\(name)\"] as? [String: Any] else { return nil }")
+            lines.append("\(indent)guard let \(name.propertyName) = \(name.type)(json: \(jsonDictionary)) else { return nil }")
+        case let .array(name, values):
+            if let value = values.first {
+                lines.append(value.initialCodeInArray(indentation: indentation.deeper, name: name))
+            } else {
+                lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [Any] else { return nil }")
+            }
+        case .url:
+            let urlString = "\(key.propertyName)String"
+            lines.append("\(indent)guard let \(urlString) = json[\"\(key)\"] as? String else { return nil }")
+            lines.append("\(indent)guard let \(key.propertyName) = URL(string: \(urlString)) else { return nil }")
+        }
+        return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
+    }
+
     func failableInitializerCode(indentation: Indentation) -> String {
         let indent = indentation.value
-        let indent1 = indentation.value1
         var lines: [String] = []
         switch self {
         case let .object(_, dictionary):
             lines.append("\(indent)init?(json: [String: Any]) {")
             for (key, value) in dictionary {
-                switch value {
-                case let .null(optionalValue):
-                    if let value = optionalValue {
-                        lines.append(value.optionalInitialCode(indentation: indentation.deeper, key: key))
-                    } else {
-                        lines.append("\(indent1)let \(key.propertyName) = json[\"\(key)\"]")
-                    }
-                case .bool, .number, .string:
-                    lines.append("\(indent1)guard let \(key.propertyName) = json[\"\(key)\"] as? \(value.type) else { return nil }")
-                case let .object(name, _):
-                    let jsonDictionary = "\(name.propertyName)JSONDictionary"
-                    lines.append("\(indent1)guard let \(jsonDictionary) = json[\"\(name)\"] as? [String: Any] else { return nil }")
-                    lines.append("\(indent1)guard let \(name.propertyName) = \(name.type)(json: \(jsonDictionary)) else { return nil }")
-                case let .array(name, values):
-                    if let value = values.first {
-                        lines.append(value.initialCodeInArray(indentation: indentation.deeper, name: name))
-                    } else {
-                        lines.append("\(indent1)guard let \(name.propertyName) = json[\"\(name)\"] as? [Any] else { return nil }")
-                    }
-                case .url:
-                    let urlString = "\(key.propertyName)String"
-                    lines.append("\(indent1)guard let \(urlString) = json[\"\(key)\"] as? String else { return nil }")
-                    lines.append("\(indent1)guard let \(key.propertyName) = URL(string: \(urlString)) else { return nil }")
-                }
+                lines.append(value.initialCode(indentation: indentation.deeper, key: key))
             }
         default:
             break
