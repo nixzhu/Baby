@@ -120,6 +120,10 @@ extension String {
     fileprivate var propertyNameFromValue: String {
         return String(self.characters.dropLast())
     }
+
+    fileprivate var type: String {
+        return self.capitalized.components(separatedBy: "_").joined(separator: "")
+    }
 }
 
 extension Value {
@@ -144,7 +148,7 @@ extension Value {
         case .string:
             return "String"
         case let .object(name, _):
-            return name
+            return name.type
         case let .array(_, values):
             if let value = values.first {
                 return "[" + value.type + "]"
@@ -159,7 +163,7 @@ extension Value {
     var `struct`: String {
         switch self {
         case let .object(name, dictionary):
-            var lines: [String] = ["struct \(name) {"]
+            var lines: [String] = ["struct \(name.type) {"]
             for (key, value) in dictionary {
                 lines.append(value.struct)
                 lines.append("let \(key): \(value.type) ")
