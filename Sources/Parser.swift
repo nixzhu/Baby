@@ -175,7 +175,7 @@ private let number: Parser<Value> = {
         let exponent = ($0.1).flatMap({ "e" + String($0) }) ?? ""
         return sign + int + fraction + exponent
     }
-    return map(numberString) { string in
+    return map(eatRight(numberString, spaces)) { string in
         if let int = Int(string) {
             return Value.number(value: .int(int))
         } else {
