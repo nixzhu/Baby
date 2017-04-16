@@ -18,52 +18,78 @@ public enum Value {
 
 extension Value {
 
-    /*
+    static func mergedValue(of values: [Value]) -> Value {
+        if let first = values.first {
+            return values.dropFirst().reduce(first, { $0.merge($1) })
+        } else {
+            return .null(optionalValue: nil)
+        }
+    }
+
     func merge(_ other: Value) -> Value {
         switch (self, other) {
-        case (.null, .null):
-            return .null
-        case (let .bool(value, isRequired), let .bool(value2, isRequired2)):
-            return .bool(value: value && value2, isRequired: isRequired && isRequired2)
-        case (let .number(value, isRequired), let .number(value2, isRequired2)):
-            var newValue = value
-            if case .double(_) = value2 {
-                newValue = value2
+        case (.null(let optionalValueA), .null(let optionalValueB)):
+            switch (optionalValueA, optionalValueB) {
+            case (.some(let a), .some(let b)):
+                return .null(optionalValue: a.merge(b))
+            case (.some(let a), .none):
+                return .null(optionalValue: a)
+            case (.none, .some(let b)):
+                return .null(optionalValue: b)
+            case (.none, .none):
+                return .null(optionalValue: nil)
             }
-            return .number(value: newValue, isRequired: isRequired && isRequired2)
-        case (let .string(value, isRequired), let .string(value2, isRequired2)):
-            return .string(value: value + value2, isRequired: isRequired && isRequired2)
-        case (let .object(name, value, isRequired), let .object(name2, value2, isRequired2)):
-            guard name == name2 else { fatalError("Unsupported object union!") }
-            var newValue: [String: Value] = [:]
-            for key in value.keys {
-                let v1 = value[key]!
-                if let v2 = value2[key] {
-                    newValue[key] = v1.merge(v2)
+        case (.null(let optionalValue), let valueB):
+            if let valueA = optionalValue {
+                return .null(optionalValue: .some(valueA.merge(valueB)))
+            } else {
+                return .null(optionalValue: .some(valueB))
+            }
+        case (let valueA, .null(let optionalValue)):
+            if let valueB = optionalValue {
+                return .null(optionalValue: .some(valueB.merge(valueA)))
+            } else {
+                return .null(optionalValue: .some(valueA))
+            }
+        case (.bool(let valueA), .bool(let valueB)):
+            return .bool(value: valueA && valueB)
+        case (.number(let valueA), .number(let valueB)):
+            var newValue = valueA
+            if case .double(_) = valueB {
+                newValue = valueB
+            }
+            return .number(value: newValue)
+        case (.string(let valueA), .string(let valueB)):
+            let string = valueA.isEmpty ? valueB : valueA
+            return .string(value: string)
+        case (.object(let nameA, let dictionaryA), .object(let nameB, let dictionaryB)):
+            guard nameA == nameB else { fatalError("Unsupported object merge!") }
+            var dictionary = dictionaryA
+            for key in dictionaryA.keys {
+                let valueA = dictionaryA[key]!
+                if let valueB = dictionaryB[key] {
+                    dictionary[key] = valueA.merge(valueB)
                 } else {
-                    
+                    dictionary[key] = .null(optionalValue: valueA)
                 }
             }
-
-            
-            var newValue = value
-            value2.forEach { newValue[$0] = $1 }
-            return .object(name: name, value: newValue, isRequired: isRequired && isRequired2)
-        case (let .array(name, value, isRequired), let .array(name2, value2, isRequired2)):
-            guard name == name2 else { fatalError("Unsupported array union!") }
-            let values = value + value2
-            guard let firstValue = values.first else {
-                return .array(name: name, value: [], isRequired: false)
+            for key in dictionaryB.keys {
+                let valueB = dictionaryB[key]!
+                if let valueA = dictionaryA[key] {
+                    dictionary[key] = valueB.merge(valueA)
+                } else {
+                    dictionary[key] = .null(optionalValue: valueB)
+                }
             }
-            let newValue = values.dropFirst().reduce(firstValue, { $0.merge($1) })
-            return .array(name: name, value: [newValue], isRequired: isRequired && isRequired2)
-
+            return .object(name: nameA, dictionary: dictionary)
+        case (let .array(nameA, valuesA), let .array(nameB, valuesB)):
+            guard nameA == nameB else { fatalError("Unsupported array merge!") }
+            let value = Value.mergedValue(of: valuesA + valuesB)
+            return .array(name: nameA, values: [value])
         default:
-            return self
+            fatalError("Unsupported merge!")
         }
-
-        return self
-    }*/
+    }
 
     func upgraded(newName: String) -> Value {
         switch self {
@@ -79,7 +105,8 @@ extension Value {
             return .object(name: newName, dictionary: newDictionary)
         case .array(name: _, values: let values):
             let newValues = values.map { $0.upgraded(newName: newName.propertyNameFromValue) }
-            return .array(name: newName, values: newValues)
+            let value = Value.mergedValue(of: newValues)
+            return .array(name: newName, values: [value])
         default:
             return self
         }
