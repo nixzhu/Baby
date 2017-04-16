@@ -311,6 +311,7 @@ extension Value {
 
     private func failableInitializerCode(indentation: Indentation) -> String {
         let indent = indentation.value
+        let indent1 = indentation.deeper.value
         var lines: [String] = []
         switch self {
         case let .object(_, dictionary):
@@ -318,6 +319,8 @@ extension Value {
             for (key, value) in dictionary {
                 lines.append(value.initialCode(indentation: indentation.deeper, key: key))
             }
+            let arguments = dictionary.keys.map({ "\($0.propertyName): \($0.propertyName)" }).joined(separator: ", ")
+            lines.append("\(indent1)self.init(\(arguments))")
         default:
             break
         }
