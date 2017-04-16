@@ -106,7 +106,7 @@ extension Value {
             dictionary.forEach { newDictionary[$0] = $1.upgraded(newName: $0) }
             return .object(name: newName, dictionary: newDictionary)
         case .array(name: _, values: let values):
-            let newValues = values.map { $0.upgraded(newName: newName.propertyNameFromValue) }
+            let newValues = values.map { $0.upgraded(newName: newName.singularForm) }
             let value = Value.mergedValue(of: newValues)
             return .array(name: newName, values: [value])
         default:
@@ -117,12 +117,12 @@ extension Value {
 
 extension String {
 
-    fileprivate var propertyNameFromValue: String {
-        return String(self.characters.dropLast()) // TODO: better propertyNameFromValue
+    fileprivate var singularForm: String {
+        return String(self.characters.dropLast()) // TODO: better singularForm
     }
 
     fileprivate var type: String {
-        return self.capitalized.components(separatedBy: "_").joined(separator: "")
+        return self.capitalized.components(separatedBy: "_").joined(separator: "") // TODO: better type
     }
 
     fileprivate var propertyName: String {
@@ -137,7 +137,7 @@ extension String {
 
 extension Value {
 
-    var type: String {
+    fileprivate var type: String {
         switch self {
         case let .null(optionalValue):
             if let value = optionalValue {
@@ -220,7 +220,7 @@ extension Value {
         case .object:
             let jsonArray = "\(name.propertyName)JSONArray"
             lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [[String: Any]]")
-            lines.append("\(indent)let \(name.propertyName) = \(jsonArray).flatMap({ \(name.propertyNameFromValue.type)(json: $0) }).flatMap({ $0 })")
+            lines.append("\(indent)let \(name.propertyName) = \(jsonArray).flatMap({ \(name.singularForm.type)(json: $0) }).flatMap({ $0 })")
         case .array:
             fatalError("Unsupported array in array!")
         case .url:
@@ -268,7 +268,7 @@ extension Value {
         case .object:
             let jsonArray = "\(name.propertyName)JSONArray"
             lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [[String: Any]] else { return nil }")
-            lines.append("\(indent)let \(name.propertyName) = \(jsonArray).map({ \(name.propertyNameFromValue.type)(json: $0) }).flatMap({ $0 })")
+            lines.append("\(indent)let \(name.propertyName) = \(jsonArray).map({ \(name.singularForm.type)(json: $0) }).flatMap({ $0 })")
         case .array:
             fatalError("Unsupported array in array!")
         case .url:
@@ -345,8 +345,7 @@ extension Value {
         case let .array(_, values):
             return values.first?.structCode(indentation: indentation) ?? ""
         default:
-            break
+            return ""
         }
-        return ""
     }
 }
