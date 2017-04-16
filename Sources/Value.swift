@@ -18,7 +18,7 @@ public enum Value {
 
 extension Value {
 
-    static func mergedValue(of values: [Value]) -> Value {
+    private static func mergedValue(of values: [Value]) -> Value {
         if let first = values.first {
             return values.dropFirst().reduce(first, { $0.merge($1) })
         } else {
@@ -26,7 +26,7 @@ extension Value {
         }
     }
 
-    func merge(_ other: Value) -> Value {
+    private func merge(_ other: Value) -> Value {
         switch (self, other) {
         case (let .null(optionalValueA), let .null(optionalValueB)):
             switch (optionalValueA, optionalValueB) {
@@ -93,7 +93,7 @@ extension Value {
         }
     }
 
-    func upgraded(newName: String) -> Value {
+    public func upgraded(newName: String) -> Value {
         switch self {
         case .string(value: let value):
             if let url = URL(string: value), url.host != nil {
@@ -117,7 +117,7 @@ extension Value {
 
 extension String {
 
-    var propertyNameFromValue: String {
+    fileprivate var propertyNameFromValue: String {
         return String(self.characters.dropLast())
     }
 }
