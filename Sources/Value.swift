@@ -121,3 +121,56 @@ extension String {
         return String(self.characters.dropLast())
     }
 }
+
+extension Value {
+
+    var type: String {
+        switch self {
+        case let .null(optionalValue):
+            if let value = optionalValue {
+                return value.type + "?"
+            } else {
+                return "Any?"
+            }
+        case .bool:
+            return "Bool"
+        case let .number(value):
+            switch value {
+            case .int:
+                return "Int"
+            case .double:
+                return "Double"
+            }
+        case .string:
+            return "String"
+        case let .object(name, _):
+            return name
+        case let .array(_, values):
+            if let value = values.first {
+                return "[" + value.type + "]"
+            } else {
+                return "[Any]"
+            }
+        case .url:
+            return "URL"
+        }
+    }
+
+    var `struct`: String {
+        switch self {
+        case let .object(name, dictionary):
+            var lines: [String] = ["struct \(name) {"]
+            for (key, value) in dictionary {
+                lines.append(value.struct)
+                lines.append("let \(key): \(value.type) ")
+            }
+            lines.append("}")
+            return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
+        case let .array(_, values):
+            return values.first?.struct ?? ""
+        default:
+            break
+        }
+        return ""
+    }
+}
