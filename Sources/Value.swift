@@ -160,18 +160,37 @@ extension Value {
         }
     }
 
-    var `struct`: String {
+    struct Indentation {
+        let level: Int
+        let unit: String
+        static var `default`: Indentation {
+            return Indentation(level: 0, unit: "    ")
+        }
+        var value: String {
+            return String(repeating: unit, count: level)
+        }
+        var value1: String {
+            return String(repeating: unit, count: level + 1)
+        }
+        var deeper: Indentation {
+            return Indentation(level: level + 1, unit: unit)
+        }
+    }
+
+    func structCode(indentation: Indentation = Indentation.default) -> String {
+        let indent = indentation.value
+        let indent1 = indentation.value1
         switch self {
         case let .object(name, dictionary):
-            var lines: [String] = ["struct \(name.type) {"]
+            var lines: [String] = ["\(indent)struct \(name.type) {"]
             for (key, value) in dictionary {
-                lines.append(value.struct)
-                lines.append("let \(key): \(value.type) ")
+                lines.append(value.structCode(indentation: indentation.deeper))
+                lines.append("\(indent1)let \(key): \(value.type) ")
             }
-            lines.append("}")
+            lines.append("\(indent)}")
             return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
         case let .array(_, values):
-            return values.first?.struct ?? ""
+            return values.first?.structCode(indentation: indentation) ?? ""
         default:
             break
         }

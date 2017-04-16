@@ -3,5 +3,5 @@ let jsonString = "{\"name\":\"NIX\",\"age\":18,\"detail\":{\"skills\":[\"Swift o
 if let (value, remainder) = parse(jsonString) {
     let upgradedValue = value.upgraded(newName: "Model")
     print(upgradedValue)
-    print(upgradedValue.struct)
+    print(upgradedValue.structCode())
 }
