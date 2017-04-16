@@ -190,6 +190,25 @@ public struct Indentation {
 
 extension Value {
 
+    private func initializerCode(indentation: Indentation) -> String {
+        let indent = indentation.value
+        let indent1 = indentation.deeper.value
+        var lines: [String] = []
+        switch self {
+        case let .object(_, dictionary):
+            let arguments = dictionary.map({ "\($0.propertyName): \($1.type)" }).joined(separator: ", ")
+            lines.append("\(indent)init(\(arguments)) {")
+            for (key, _) in dictionary {
+                let propertyName = key.propertyName
+                lines.append("\(indent1)self.\(propertyName) = \(propertyName)")
+            }
+        default:
+            break
+        }
+        lines.append("\(indent)}")
+        return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
+    }
+
     private func optionalInitialCodeInArray(indentation: Indentation, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
@@ -316,6 +335,7 @@ extension Value {
                 lines.append(value.structCode(indentation: indentation.deeper))
                 lines.append("\(indent1)let \(key.propertyName): \(value.type) ")
             }
+            lines.append(self.initializerCode(indentation: indentation.deeper))
             lines.append(self.failableInitializerCode(indentation: indentation.deeper))
             lines.append("\(indent)}")
             return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
