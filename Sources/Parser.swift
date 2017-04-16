@@ -130,6 +130,18 @@ private func word(_ string: String) -> Parser<String> {
     }
 }
 
+// Helpers
+
+private let spaces: Parser<String> = {
+    let whitespace = one(of: [
+        character(" "),
+        character("\t"),
+        character("\n"),
+        ]
+    )
+    return map(many(whitespace)) { String($0) }
+}()
+
 // Parsers
 
 private let null: Parser<Value> = {
@@ -216,11 +228,11 @@ private let value: Parser<Value> = { stream in
 }
 
 private let object: Parser<Value> = {
-    let beginObject = character("{")
-    let endObject = character("}")
-    let colon = character(":")
-    let comma = character(",")
-    let keyValue = and(eatRight(quotedString, colon), value)
+    let beginObject = eatRight(character("{"), spaces)
+    let endObject = eatRight(character("}"), spaces)
+    let colon = eatRight(character(":"), spaces)
+    let comma = eatRight(character(","), spaces)
+    let keyValue = and(eatRight(eatRight(quotedString, spaces), colon), eatRight(value, spaces))
     let keyValues = list(keyValue, comma)
     return map(between(beginObject, keyValues, endObject)) {
         var dictionary: [String: Value] = [:]
@@ -232,10 +244,10 @@ private let object: Parser<Value> = {
 }()
 
 private let array: Parser<Value> = {
-    let beginArray = character("[")
-    let endArray = character("]")
-    let comma = character(",")
-    let values = list(value, comma)
+    let beginArray = eatRight(character("["), spaces)
+    let endArray = eatRight(character("]"), spaces)
+    let comma = eatRight(character(","), spaces)
+    let values = list(eatRight(value, spaces), comma)
     return map(between(beginArray, values, endArray)) { Value.array(name: "Array", values: $0) }
 }()
 
