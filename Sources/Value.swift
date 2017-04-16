@@ -10,8 +10,8 @@ public enum Value {
     }
     case number(value: Number)
     case string(value: String)
-    indirect case object(name: String, value: [String: Value])
-    indirect case array(name: String, value: [Value])
+    indirect case object(name: String, dictionary: [String: Value])
+    indirect case array(name: String, values: [Value])
     // hyper type
     case url(value: URL)
 }
@@ -73,13 +73,13 @@ extension Value {
             } else {
                 return self
             }
-        case .object(name: _, value: let value):
-            var newValue: [String: Value] = [:]
-            value.forEach { newValue[$0] = $1.updated(newName: $0) }
-            return .object(name: newName, value: newValue)
-        case .array(name: _, value: let value):
-            let newValue = value.map { $0.updated(newName: newName.propertyNameFromValue) }
-            return .array(name: newName, value: newValue)
+        case .object(name: _, dictionary: let dictionary):
+            var newDictionary: [String: Value] = [:]
+            dictionary.forEach { newDictionary[$0] = $1.updated(newName: $0) }
+            return .object(name: newName, dictionary: newDictionary)
+        case .array(name: _, values: let values):
+            let newValues = values.map { $0.updated(newName: newName.propertyNameFromValue) }
+            return .array(name: newName, values: newValues)
         default:
             return self
         }

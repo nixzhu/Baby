@@ -227,7 +227,7 @@ private let object: Parser<Value> = {
         for (key, value) in $0 {
             dictionary[key] = value
         }
-        return Value.object(name: "Object", value: dictionary)
+        return Value.object(name: "Object", dictionary: dictionary)
     }
 }()
 
@@ -236,7 +236,7 @@ private let array: Parser<Value> = {
     let endArray = character("]")
     let comma = character(",")
     let values = list(value, comma)
-    return map(between(beginArray, values, endArray)) { Value.array(name: "Array", value: $0) }
+    return map(between(beginArray, values, endArray)) { Value.array(name: "Array", values: $0) }
 }()
 
 public func parse(_ input: String) -> (Value, String)? {
