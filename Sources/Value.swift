@@ -168,25 +168,29 @@ extension Value {
             return "URL"
         }
     }
+}
 
-    struct Indentation {
-        let level: Int
-        let unit: String
-        static var `default`: Indentation {
-            return Indentation(level: 0, unit: "    ")
-        }
-        var value: String {
-            return String(repeating: unit, count: level)
-        }
-        var value1: String {
-            return String(repeating: unit, count: level + 1)
-        }
-        var deeper: Indentation {
-            return Indentation(level: level + 1, unit: unit)
-        }
+public struct Indentation {
+    private let level: Int
+    private let unit: String
+    public init(level: Int, unit: String) {
+        self.level = level
+        self.unit = unit
     }
+    static var `default`: Indentation {
+        return Indentation(level: 0, unit: "    ")
+    }
+    var value: String {
+        return String(repeating: unit, count: level)
+    }
+    var deeper: Indentation {
+        return Indentation(level: level + 1, unit: unit)
+    }
+}
 
-    func optionalInitialCodeInArray(indentation: Indentation, name: String) -> String {
+extension Value {
+
+    private func optionalInitialCodeInArray(indentation: Indentation, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
         let jsonArray = "\(name.propertyName)JSONArray"
@@ -208,7 +212,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    func optionalInitialCode(indentation: Indentation, key: String) -> String {
+    private func optionalInitialCode(indentation: Indentation, key: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
@@ -222,7 +226,7 @@ extension Value {
             lines.append("\(indent)let \(name.propertyName) = \(jsonDictionary).flatMap({ \(name.type)(json: $0) })")
         case let .array(name, values):
             if let value = values.first {
-                lines.append(value.optionalInitialCodeInArray(indentation: indentation.deeper, name: name))
+                lines.append(value.optionalInitialCodeInArray(indentation: indentation, name: name))
             } else {
                 lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [Any] else { return nil }")
             }
@@ -234,7 +238,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    func initialCodeInArray(indentation: Indentation, name: String) -> String {
+    private func initialCodeInArray(indentation: Indentation, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
         let jsonArray = "\(name.propertyName)JSONArray"
@@ -256,13 +260,13 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    func initialCode(indentation: Indentation, key: String) -> String {
+    private func initialCode(indentation: Indentation, key: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
         case let .null(optionalValue):
             if let value = optionalValue {
-                lines.append(value.optionalInitialCode(indentation: indentation.deeper, key: key))
+                lines.append(value.optionalInitialCode(indentation: indentation, key: key))
             } else {
                 lines.append("\(indent)let \(key.propertyName) = json[\"\(key)\"]")
             }
@@ -274,7 +278,7 @@ extension Value {
             lines.append("\(indent)guard let \(name.propertyName) = \(name.type)(json: \(jsonDictionary)) else { return nil }")
         case let .array(name, values):
             if let value = values.first {
-                lines.append(value.initialCodeInArray(indentation: indentation.deeper, name: name))
+                lines.append(value.initialCodeInArray(indentation: indentation, name: name))
             } else {
                 lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [Any] else { return nil }")
             }
@@ -286,7 +290,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    func failableInitializerCode(indentation: Indentation) -> String {
+    private func failableInitializerCode(indentation: Indentation) -> String {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
@@ -302,9 +306,9 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    func structCode(indentation: Indentation = Indentation.default) -> String {
+    public func structCode(indentation: Indentation = Indentation.default) -> String {
         let indent = indentation.value
-        let indent1 = indentation.value1
+        let indent1 = indentation.deeper.value
         switch self {
         case let .object(name, dictionary):
             var lines: [String] = ["\(indent)struct \(name.type) {"]
