@@ -28,7 +28,7 @@ extension Value {
 
     func merge(_ other: Value) -> Value {
         switch (self, other) {
-        case (.null(let optionalValueA), .null(let optionalValueB)):
+        case (let .null(optionalValueA), let .null(optionalValueB)):
             switch (optionalValueA, optionalValueB) {
             case (.some(let a), .some(let b)):
                 return .null(optionalValue: a.merge(b))
@@ -39,30 +39,30 @@ extension Value {
             case (.none, .none):
                 return .null(optionalValue: nil)
             }
-        case (.null(let optionalValue), let valueB):
+        case (let .null(optionalValue), let valueB):
             if let valueA = optionalValue {
                 return .null(optionalValue: .some(valueA.merge(valueB)))
             } else {
                 return .null(optionalValue: .some(valueB))
             }
-        case (let valueA, .null(let optionalValue)):
+        case (let valueA, let .null(optionalValue)):
             if let valueB = optionalValue {
                 return .null(optionalValue: .some(valueB.merge(valueA)))
             } else {
                 return .null(optionalValue: .some(valueA))
             }
-        case (.bool(let valueA), .bool(let valueB)):
+        case (let .bool(valueA), let .bool(valueB)):
             return .bool(value: valueA && valueB)
-        case (.number(let valueA), .number(let valueB)):
+        case (let .number(valueA), let .number(valueB)):
             var newValue = valueA
             if case .double(_) = valueB {
                 newValue = valueB
             }
             return .number(value: newValue)
-        case (.string(let valueA), .string(let valueB)):
-            let string = valueA.isEmpty ? valueB : valueA
-            return .string(value: string)
-        case (.object(let nameA, let dictionaryA), .object(let nameB, let dictionaryB)):
+        case (let .string(valueA), let .string(valueB)):
+            let value = valueA.isEmpty ? valueB : valueA
+            return .string(value: value)
+        case (let .object(nameA, dictionaryA), let .object(nameB, dictionaryB)):
             guard nameA == nameB else { fatalError("Unsupported object merge!") }
             var dictionary = dictionaryA
             for key in dictionaryA.keys {
@@ -86,6 +86,8 @@ extension Value {
             guard nameA == nameB else { fatalError("Unsupported array merge!") }
             let value = Value.mergedValue(of: valuesA + valuesB)
             return .array(name: nameA, values: [value])
+        case (.url(let valueA), .url):
+            return .url(value: valueA)
         default:
             fatalError("Unsupported merge!")
         }
