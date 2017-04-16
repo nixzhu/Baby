@@ -118,11 +118,20 @@ extension Value {
 extension String {
 
     fileprivate var propertyNameFromValue: String {
-        return String(self.characters.dropLast())
+        return String(self.characters.dropLast()) // TODO: better propertyNameFromValue
     }
 
     fileprivate var type: String {
         return self.capitalized.components(separatedBy: "_").joined(separator: "")
+    }
+
+    fileprivate var propertyName: String {
+        let characters = type.characters
+        if let first = characters.first {
+            return String(first).lowercased() + String(characters.dropFirst())
+        } else {
+            return self
+        }
     }
 }
 
@@ -185,7 +194,7 @@ extension Value {
             var lines: [String] = ["\(indent)struct \(name.type) {"]
             for (key, value) in dictionary {
                 lines.append(value.structCode(indentation: indentation.deeper))
-                lines.append("\(indent1)let \(key): \(value.type) ")
+                lines.append("\(indent1)let \(key.propertyName): \(value.type) ")
             }
             lines.append("\(indent)}")
             return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
