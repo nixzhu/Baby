@@ -65,7 +65,7 @@ extension Value {
         return self
     }*/
 
-    func updated(newName: String) -> Value {
+    func upgraded(newName: String) -> Value {
         switch self {
         case .string(value: let value):
             if let url = URL(string: value), url.host != nil {
@@ -75,10 +75,10 @@ extension Value {
             }
         case .object(name: _, dictionary: let dictionary):
             var newDictionary: [String: Value] = [:]
-            dictionary.forEach { newDictionary[$0] = $1.updated(newName: $0) }
+            dictionary.forEach { newDictionary[$0] = $1.upgraded(newName: $0) }
             return .object(name: newName, dictionary: newDictionary)
         case .array(name: _, values: let values):
-            let newValues = values.map { $0.updated(newName: newName.propertyNameFromValue) }
+            let newValues = values.map { $0.upgraded(newName: newName.propertyNameFromValue) }
             return .array(name: newName, values: newValues)
         default:
             return self
