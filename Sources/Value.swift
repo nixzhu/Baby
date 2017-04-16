@@ -212,17 +212,17 @@ extension Value {
     private func optionalInitialCodeInArray(indentation: Indentation, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
-        let jsonArray = "\(name.propertyName)JSONArray"
         switch self {
         case .null:
             lines.append("\(indent)let \(name.propertyName) = json[\"\(name)\"] as? [Any?]")
         case .bool, .number, .string:
             lines.append("\(indent)let \(name.propertyName) = json[\"\(name)\"] as? [\(self.type)]")
         case .object:
+            let jsonArray = "\(name.propertyName)JSONArray"
             lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [[String: Any]]")
-            lines.append("\(indent)let \(name.propertyName) = \(jsonArray).flatMap({ \(name.type)(json: $0).flatMap({ $0 }) })")
+            lines.append("\(indent)let \(name.propertyName) = \(jsonArray).flatMap({ \(name.propertyNameFromValue.type)(json: $0) }).flatMap({ $0 })")
         case .array:
-            lines.append("\(indent)let \(name.propertyName) = ...")
+            fatalError("Unsupported array in array!")
         case .url:
             let urlStrings = "\(name.propertyName)Strings"
             lines.append("\(indent)let \(urlStrings) = json[\"\(name)\"] as? [String]")
@@ -260,21 +260,21 @@ extension Value {
     private func initialCodeInArray(indentation: Indentation, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
-        let jsonArray = "\(name.propertyName)JSONArray"
         switch self {
         case .null:
             lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [Any] else { return nil }")
         case .bool, .number, .string:
             lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
         case .object:
+            let jsonArray = "\(name.propertyName)JSONArray"
             lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [[String: Any]] else { return nil }")
-            lines.append("\(indent)let \(name.propertyName) = \(jsonArray).map({ \(name.type)(json: $0).flatMap({ $0 }) })")
+            lines.append("\(indent)let \(name.propertyName) = \(jsonArray).map({ \(name.propertyNameFromValue.type)(json: $0) }).flatMap({ $0 })")
         case .array:
-            lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [...] else { return nil }")
+            fatalError("Unsupported array in array!")
         case .url:
             let urlStrings = "\(name.propertyName)Strings"
             lines.append("\(indent)guard let \(urlStrings) = json[\"\(name)\"] as? [String] else { return nil }")
-            lines.append("\(indent)guard let \(name.propertyName) = \(urlStrings).flatMap({ URL(string: $0)! }) else { return nil }")
+            lines.append("\(indent)let \(name.propertyName) = \(urlStrings).map({ URL(string: $0) }).flatMap({ $0 })")
         }
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
