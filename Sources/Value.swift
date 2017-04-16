@@ -2,37 +2,84 @@
 import Foundation
 
 public enum Value {
-    case null
-    case bool(value: Bool, isRequired: Bool)
+    indirect case null(optionalValue: Value?)
+    case bool(value: Bool)
     public enum Number {
         case int(Int)
         case double(Double)
     }
-    case number(value: Number, isRequired: Bool)
-    case string(value: String, isRequired: Bool)
-    indirect case object(name: String, value: [String: Value], isRequired: Bool)
-    indirect case array(name: String, value: [Value], isRequired: Bool)
+    case number(value: Number)
+    case string(value: String)
+    indirect case object(name: String, value: [String: Value])
+    indirect case array(name: String, value: [Value])
     // hyper type
-    case url(value: URL, isRequired: Bool)
+    case url(value: URL)
 }
 
 extension Value {
 
+    /*
+    func merge(_ other: Value) -> Value {
+        switch (self, other) {
+        case (.null, .null):
+            return .null
+        case (let .bool(value, isRequired), let .bool(value2, isRequired2)):
+            return .bool(value: value && value2, isRequired: isRequired && isRequired2)
+        case (let .number(value, isRequired), let .number(value2, isRequired2)):
+            var newValue = value
+            if case .double(_) = value2 {
+                newValue = value2
+            }
+            return .number(value: newValue, isRequired: isRequired && isRequired2)
+        case (let .string(value, isRequired), let .string(value2, isRequired2)):
+            return .string(value: value + value2, isRequired: isRequired && isRequired2)
+        case (let .object(name, value, isRequired), let .object(name2, value2, isRequired2)):
+            guard name == name2 else { fatalError("Unsupported object union!") }
+            var newValue: [String: Value] = [:]
+            for key in value.keys {
+                let v1 = value[key]!
+                if let v2 = value2[key] {
+                    newValue[key] = v1.merge(v2)
+                } else {
+                    
+                }
+            }
+
+            
+            var newValue = value
+            value2.forEach { newValue[$0] = $1 }
+            return .object(name: name, value: newValue, isRequired: isRequired && isRequired2)
+        case (let .array(name, value, isRequired), let .array(name2, value2, isRequired2)):
+            guard name == name2 else { fatalError("Unsupported array union!") }
+            let values = value + value2
+            guard let firstValue = values.first else {
+                return .array(name: name, value: [], isRequired: false)
+            }
+            let newValue = values.dropFirst().reduce(firstValue, { $0.merge($1) })
+            return .array(name: name, value: [newValue], isRequired: isRequired && isRequired2)
+
+        default:
+            return self
+        }
+
+        return self
+    }*/
+
     func updated(newName: String) -> Value {
         switch self {
-        case .string(value: let value, isRequired: let isRequired):
-            if let url = URL(string: value), let host = url.host, !host.isEmpty {
-                return .url(value: url, isRequired: isRequired)
+        case .string(value: let value):
+            if let url = URL(string: value), url.host != nil {
+                return .url(value: url)
             } else {
                 return self
             }
-        case .object(name: _, value: let value, isRequired: let isRequired):
+        case .object(name: _, value: let value):
             var newValue: [String: Value] = [:]
             value.forEach { newValue[$0] = $1.updated(newName: $0) }
-            return .object(name: newName, value: newValue, isRequired: isRequired)
-        case .array(name: _, value: let value, isRequired: let isRequired):
+            return .object(name: newName, value: newValue)
+        case .array(name: _, value: let value):
             let newValue = value.map { $0.updated(newName: newName.propertyNameFromValue) }
-            return .array(name: newName, value: newValue, isRequired: isRequired)
+            return .array(name: newName, value: newValue)
         default:
             return self
         }

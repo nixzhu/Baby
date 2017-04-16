@@ -133,13 +133,13 @@ private func word(_ string: String) -> Parser<String> {
 // Parsers
 
 private let null: Parser<Value> = {
-    return map(word("null")) { _ in Value.null }
+    return map(word("null")) { _ in Value.null(optionalValue: nil) }
 }()
 
 private let bool: Parser<Value> = {
     let `true` = map(word("true")) { _ in true }
     let `false` = map(word("false")) { _ in false }
-    return map(or(`true`, `false`)) { bool in Value.bool(value: bool, isRequired: true) }
+    return map(or(`true`, `false`)) { bool in Value.bool(value: bool) }
 }()
 
 private let number: Parser<Value> = {
@@ -165,10 +165,10 @@ private let number: Parser<Value> = {
     }
     return map(numberString) { string in
         if let int = Int(string) {
-            return Value.number(value: .int(int), isRequired: true)
+            return Value.number(value: .int(int))
         } else {
             let double = Double(string)!
-            return Value.number(value: .double(double), isRequired: true)
+            return Value.number(value: .double(double))
         }
     }
 }()
@@ -204,7 +204,7 @@ private let quotedString: Parser<String> = {
 }()
 
 private let string: Parser<Value> = {
-    return map(quotedString) { Value.string(value: $0, isRequired: true) }
+    return map(quotedString) { Value.string(value: $0) }
 }()
 
 private var _value: Parser<Value>?
@@ -227,7 +227,7 @@ private let object: Parser<Value> = {
         for (key, value) in $0 {
             dictionary[key] = value
         }
-        return Value.object(name: "Object", value: dictionary, isRequired: true)
+        return Value.object(name: "Object", value: dictionary)
     }
 }()
 
@@ -236,7 +236,7 @@ private let array: Parser<Value> = {
     let endArray = character("]")
     let comma = character(",")
     let values = list(value, comma)
-    return map(between(beginArray, values, endArray)) { Value.array(name: "Array", value: $0, isRequired: true) }
+    return map(between(beginArray, values, endArray)) { Value.array(name: "Array", value: $0) }
 }()
 
 public func parse(_ input: String) -> (Value, String)? {
