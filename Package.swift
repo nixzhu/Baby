@@ -2,10 +2,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "baby",
+    name: "Baby",
     targets: [
         Target(
-            name: "baby",
+            name: "Baby",
             dependencies: ["BabyBrain"]
         ),
         Target(name: "BabyBrain")
