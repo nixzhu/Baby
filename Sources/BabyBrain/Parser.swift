@@ -222,7 +222,7 @@ private let string: Parser<Value> = {
 private var _value: Parser<Value>?
 private let value: Parser<Value> = { stream in
     if let parser = _value {
-        return parser(stream)
+        return eatLeft(spaces, parser)(stream)
     }
     return nil
 }
