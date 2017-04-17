@@ -1,4 +1,8 @@
 
+/*
+ * @nixzhu (zhuhongxu@gmail.com)
+ */
+
 private typealias Stream = String.CharacterView
 private typealias Parser<A> = (Stream) -> (A, Stream)?
 

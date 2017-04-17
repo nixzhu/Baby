@@ -1,4 +1,8 @@
 
+/*
+ * @nixzhu (zhuhongxu@gmail.com)
+ */
+
 final public class Arguments {
 
     public enum Option: CustomStringConvertible {
@@ -53,7 +57,7 @@ final public class Arguments {
                     keyValues[a] = Value.None
                 }
             } else {
-                print("Invalid argument: \(a)")
+                print("Invalid argument: `\(a)`!")
                 break
             }
             if let b = _b {
@@ -95,7 +99,7 @@ final public class Arguments {
             let longKeyValue = keyValues["--" + longKey]?.value
             if let shortKeyValue = shortKeyValue, let longKeyValue = longKeyValue {
                 guard shortKeyValue == longKeyValue else {
-                    fatalError("Duplicate value for option: \(option)")
+                    fatalError("Duplicate value for option: `\(option)`!")
                 }
             }
             return shortKeyValue ?? longKeyValue
@@ -104,7 +108,6 @@ final public class Arguments {
 }
 
 private extension String {
-
     var arguments_isLongKey: Bool {
         return hasPrefix("--")
     }
@@ -119,7 +122,6 @@ private extension String {
 }
 
 private extension Array {
-
     subscript (arguments_safe index: Int) -> Element? {
         return indices ~= index ? self[index] : nil
     }

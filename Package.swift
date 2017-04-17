@@ -1,4 +1,8 @@
 
+/*
+ * @nixzhu (zhuhongxu@gmail.com)
+ */
+
 import PackageDescription
 
 let package = Package(
@@ -11,4 +15,3 @@ let package = Package(
         Target(name: "BabyBrain")
     ]
 )
-
