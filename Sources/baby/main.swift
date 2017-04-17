@@ -9,7 +9,7 @@ if let (value, remainder) = parse(jsonString) {
     print("")
     print(upgradedValue)
     print("")
-    print(upgradedValue.structCode())
+    print(upgradedValue.swiftStructCode())
 } else {
     print("")
     print("Invalid JSON!")
