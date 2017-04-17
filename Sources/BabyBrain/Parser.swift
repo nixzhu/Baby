@@ -145,12 +145,12 @@ private let spaces: Parser<String> = {
 // Parsers
 
 private let null: Parser<Value> = {
-    return map(word("null")) { _ in Value.null(optionalValue: nil) }
+    return map(eatRight(word("null"), spaces)) { _ in Value.null(optionalValue: nil) }
 }()
 
 private let bool: Parser<Value> = {
-    let `true` = map(word("true")) { _ in true }
-    let `false` = map(word("false")) { _ in false }
+    let `true` = map(eatRight(word("true"), spaces)) { _ in true }
+    let `false` = map(eatRight(word("false"), spaces)) { _ in false }
     return map(or(`true`, `false`)) { bool in Value.bool(value: bool) }
 }()
 
@@ -216,7 +216,7 @@ private let quotedString: Parser<String> = {
 }()
 
 private let string: Parser<Value> = {
-    return map(quotedString) { Value.string(value: $0) }
+    return map(eatRight(quotedString, spaces)) { Value.string(value: $0) }
 }()
 
 private var _value: Parser<Value>?
