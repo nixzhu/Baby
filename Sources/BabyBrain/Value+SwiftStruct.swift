@@ -23,6 +23,8 @@ extension Value {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
+        case .empty:
+            lines.append("\(indent)let \(name.propertyName) = json[\"\(name)\"] as? [Any]")
         case .null, .bool, .number, .string:
             lines.append("\(indent)let \(name.propertyName) = json[\"\(name)\"] as? [\(self.type)]")
         case .object:
@@ -43,8 +45,10 @@ extension Value {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
+        case .empty:
+            lines.append("\(indent)let \(key.propertyName) = json[\"\(key)\"]")
         case .null:
-            lines.append("\(indent)let \(key.propertyName) = json[\"key\"]")
+            lines.append("\(indent)let \(key.propertyName) = json[\"\(key)\"]")
         case .bool, .number, .string:
             lines.append("\(indent)let \(key.propertyName) = json[\"\(key)\"] as? \(self.type)")
         case let .object(name, _):
@@ -69,7 +73,7 @@ extension Value {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
-        case .null, .bool, .number, .string:
+        case .empty, .null, .bool, .number, .string:
             lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
         case .object:
             let jsonArray = "\(name.propertyName)JSONArray"
@@ -89,6 +93,8 @@ extension Value {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
+        case .empty:
+            lines.append("\(indent)guard let \(key.propertyName) = json[\"\(key)\"] else { return nil }")
         case let .null(optionalValue):
             if let value = optionalValue {
                 lines.append(value.optionalInitialCode(indentation: indentation, key: key))

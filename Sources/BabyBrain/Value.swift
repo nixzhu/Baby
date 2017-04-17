@@ -2,6 +2,7 @@
 import Foundation
 
 public enum Value {
+    case empty
     indirect case null(optionalValue: Value?)
     case bool(value: Bool)
     public enum Number {
@@ -21,12 +22,18 @@ extension Value {
         if let first = values.first {
             return values.dropFirst().reduce(first, { $0.merge($1) })
         } else {
-            return .null(optionalValue: nil)
+            return .empty
         }
     }
 
     private func merge(_ other: Value) -> Value {
         switch (self, other) {
+        case (.empty, .empty):
+            return .empty
+        case (.empty, let valueB):
+            return valueB
+        case (let valueA, .empty):
+            return valueA
         case (let .null(optionalValueA), let .null(optionalValueB)):
             switch (optionalValueA, optionalValueB) {
             case (.some(let a), .some(let b)):
@@ -117,6 +124,8 @@ extension Value {
 extension Value {
     public var type: String {
         switch self {
+        case .empty:
+            return "Any"
         case let .null(optionalValue):
             if let value = optionalValue {
                 return value.type + "?"
