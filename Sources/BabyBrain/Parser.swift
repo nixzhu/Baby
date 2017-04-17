@@ -234,9 +234,9 @@ private let object: Parser<Value> = {
     let comma = eatRight(character(","), spaces)
     let keyValue = and(eatRight(eatRight(quotedString, spaces), colon), eatRight(value, spaces))
     let keyValues = list(keyValue, comma)
-    return map(between(beginObject, keyValues, endObject)) {
+    return map(between(beginObject, optional(keyValues), endObject)) {
         var dictionary: [String: Value] = [:]
-        for (key, value) in $0 {
+        for (key, value) in ($0 ?? []) {
             dictionary[key] = value
         }
         return Value.object(name: "Object", dictionary: dictionary)
@@ -248,7 +248,7 @@ private let array: Parser<Value> = {
     let endArray = eatRight(character("]"), spaces)
     let comma = eatRight(character(","), spaces)
     let values = list(eatRight(value, spaces), comma)
-    return map(between(beginArray, values, endArray)) { Value.array(name: "Array", values: $0) }
+    return map(between(beginArray, optional(values), endArray)) { Value.array(name: "Array", values: $0 ?? []) }
 }()
 
 public func parse(_ input: String) -> (Value, String)? {
