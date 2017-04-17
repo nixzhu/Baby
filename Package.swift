@@ -1,7 +1,14 @@
-// swift-tools-version:3.1
 
 import PackageDescription
 
 let package = Package(
-    name: "baby"
+    name: "baby",
+    targets: [
+        Target(
+            name: "baby",
+            dependencies: ["BabyBrain"]
+        ),
+        Target(name: "BabyBrain")
+    ]
 )
+
