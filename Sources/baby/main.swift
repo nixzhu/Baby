@@ -1,6 +1,42 @@
 
+import Foundation
 import BabyBrain
 
+func main(_ arguments: [String]) {
+    let arguments = Arguments(arguments)
+    let inputFilePathOption = Arguments.Option.Mixed(shortKey: "i", longKey: "input-file-path")
+    guard let inputFilePath = arguments.valueOfOption(inputFilePathOption) else {
+        print("Usage: $ baby -i JSONFilePath")
+        return
+    }
+    let fileManager = FileManager.default
+    guard fileManager.fileExists(atPath: inputFilePath) else {
+        print("File NOT found at `\(inputFilePath)`!")
+        return
+    }
+    guard fileManager.isReadableFile(atPath: inputFilePath) else {
+        print("No permission to read file at `\(inputFilePath)`!")
+        return
+    }
+    guard let data = fileManager.contents(atPath: inputFilePath) else {
+        print("File is empty!")
+        return
+    }
+    guard let jsonString = String(data: data, encoding: .utf8) else {
+        print("File is NOT encoding with UTF8!")
+        return
+    }
+    if let (value, _) = parse(jsonString) {
+        let upgradedValue = value.upgraded(newName: "Model")
+        print(upgradedValue.swiftStructCode())
+    } else {
+        print("Invalid JSON!")
+    }
+}
+
+main(CommandLine.arguments)
+
+/*
 let jsonString = "{\n\t\"name\": \"NIX\",\n\t\"age\": 18,\n\t\"detail\": {\n\t\t\"skills\": [\n\t\t\t\"Swift on iOS\",\n\t\t\t\"C on Linux\"\n\t\t],\n\t\t\"side_projects\": [\n\t\t\t{\n\t\t\t\t\"name\": \"coolie\",\n\t\t\t\t\"intro\": \"Generate models from a JSON file\",\n\t\t\t\t\"link\": \"https://github.com/nixzhu/Coolie\"\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"name\": \"baby\",\n\t\t\t\t\"intro\": null\n\t\t\t}\n\t\t]\n\t},\n\t\"web_sites\": [\n\t\t\"https://twitter.com/nixzhu\"\n\t]\n}"
 print("")
 print(jsonString)
@@ -14,3 +50,4 @@ if let (value, remainder) = parse(jsonString) {
     print("")
     print("Invalid JSON!")
 }
+*/
