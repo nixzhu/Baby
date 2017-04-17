@@ -144,6 +144,8 @@ extension Value {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         switch self {
+        case let .null(optionalValue):
+            return optionalValue?.swiftStructCode(indentation: indentation) ?? ""
         case let .object(name, dictionary):
             var lines: [String] = ["\(indent)struct \(name.type) {"]
             for (key, value) in dictionary {
