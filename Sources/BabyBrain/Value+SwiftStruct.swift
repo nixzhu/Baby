@@ -37,6 +37,15 @@ extension Value {
             let urlStrings = "\(name.propertyName)Strings"
             lines.append("\(indent)let \(urlStrings) = json[\"\(name)\"] as? [String]")
             lines.append("\(indent)let \(name.propertyName) = \(urlStrings).flatMap({ URL(string: $0)! })")
+        case .date(let type):
+            let dateStrings = "\(name.propertyName)Strings"
+            lines.append("\(indent)let \(dateStrings) = json[\"\(name)\"] as? [String]")
+            switch type {
+            case .iso8601:
+                lines.append("\(indent)let \(name.propertyName) = \(dateStrings).flatMap({ DateFormatter.iso8601.date(from: $0) })")
+            case .dateOnly:
+                lines.append("\(indent)let \(name.propertyName) = \(dateStrings).flatMap({ DateFormatter.dateOnly.date(from: $0) })")
+            }
         }
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
@@ -65,6 +74,15 @@ extension Value {
             let urlString = "\(key.propertyName)String"
             lines.append("\(indent)let \(urlString) = json[\"\(key)\"] as? String")
             lines.append("\(indent)let \(key.propertyName) = \(urlString).flatMap({ URL(string: $0) })")
+        case .date(let type):
+            let dateString = "\(key.propertyName)String"
+            lines.append("\(indent)let \(dateString) = json[\"\(key)\"] as? String")
+            switch type {
+            case .iso8601:
+                lines.append("\(indent)let \(key.propertyName) = \(dateString).flatMap({ DateFormatter.iso8601.date(from: $0) })")
+            case .dateOnly:
+                lines.append("\(indent)let \(key.propertyName) = \(dateString).flatMap({ DateFormatter.dateOnly.date(from: $0) })")
+            }
         }
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
@@ -85,6 +103,15 @@ extension Value {
             let urlStrings = "\(name.propertyName)Strings"
             lines.append("\(indent)guard let \(urlStrings) = json[\"\(name)\"] as? [String] else { return nil }")
             lines.append("\(indent)let \(name.propertyName) = \(urlStrings).map({ URL(string: $0) }).flatMap({ $0 })")
+        case .date(let type):
+            let dateString = "\(name.propertyName)String"
+            lines.append("\(indent)guard let \(dateString) = json[\"\(name)\"] as? String else { return nil }")
+            switch type {
+            case .iso8601:
+                lines.append("\(indent)let \(name.propertyName) = \(dateString).flatMap({ DateFormatter.iso8601.date(from: $0) })")
+            case .dateOnly:
+                lines.append("\(indent)let \(name.propertyName) = \(dateString).flatMap({ DateFormatter.dateOnly.date(from: $0) })")
+            }
         }
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
@@ -117,6 +144,15 @@ extension Value {
             let urlString = "\(key.propertyName)String"
             lines.append("\(indent)guard let \(urlString) = json[\"\(key)\"] as? String else { return nil }")
             lines.append("\(indent)guard let \(key.propertyName) = URL(string: \(urlString)) else { return nil }")
+        case .date(let type):
+            let dateString = "\(key.propertyName)String"
+            lines.append("\(indent)guard let \(dateString) = json[\"\(key)\"] as? String else { return nil }")
+            switch type {
+            case .iso8601:
+                lines.append("\(indent)guard let \(key.propertyName) = DateFormatter.iso8601.date(from: \(dateString)) else { return nil }")
+            case .dateOnly:
+                lines.append("\(indent)guard let \(key.propertyName) = DateFormatter.dateOnly.date(from: \(dateString)) else { return nil }")
+            }
         }
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }

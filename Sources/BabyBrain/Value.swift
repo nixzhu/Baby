@@ -13,8 +13,13 @@ public enum Value {
     case string(value: String)
     indirect case object(name: String, dictionary: [String: Value])
     indirect case array(name: String, values: [Value])
-    // hyper type
+    // hyper types
     case url(value: URL)
+    public enum DateType {
+        case iso8601
+        case dateOnly
+    }
+    case date(type: DateType)
 }
 
 extension Value {
@@ -104,6 +109,8 @@ extension Value {
         case .string(value: let value):
             if let url = URL(string: value), url.host != nil {
                 return .url(value: url)
+            } else if let dateType = value.dateType {
+                return .date(type: dateType)
             } else {
                 return self
             }
@@ -153,6 +160,8 @@ extension Value {
             }
         case .url:
             return "URL"
+        case .date:
+            return "Date"
         }
     }
 }
@@ -173,5 +182,33 @@ extension String {
         } else {
             return self
         }
+    }
+}
+
+extension DateFormatter {
+    static let iso8601: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+        return formatter
+    }()
+
+    static let dateOnly: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+}
+
+extension String {
+    var dateType: Value.DateType? {
+        if DateFormatter.iso8601.date(from: self) != nil {
+            return .iso8601
+        }
+        if DateFormatter.dateOnly.date(from: self) != nil {
+            return .dateOnly
+        }
+        return nil
     }
 }
