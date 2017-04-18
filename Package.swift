@@ -6,10 +6,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "_Baby",
+    name: "Baby",
     targets: [
         Target(
-            name: "_Baby",
+            name: "Baby",
             dependencies: ["BabyBrain"]
         ),
         Target(name: "BabyBrain")
