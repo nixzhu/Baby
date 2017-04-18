@@ -9,14 +9,18 @@ import BabyBrain
 func main(_ arguments: [String]) {
     let arguments = Arguments(arguments)
     let versionOption = Arguments.Option.Mixed(shortKey: "v", longKey: "version")
-    if arguments.containsOption(versionOption) {
+    func printVersion() {
         print("Version 0.2.0")
         print("Created by nixzhu with love.")
+    }
+    if arguments.containsOption(versionOption) {
+        printVersion()
         return
     }
     let inputFilePathOption = Arguments.Option.Mixed(shortKey: "i", longKey: "input-file-path")
     guard let inputFilePath = arguments.valueOfOption(inputFilePathOption) else {
         print("Usage: $ baby -i JSONFilePath")
+        printVersion()
         return
     }
     let fileManager = FileManager.default
