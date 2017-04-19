@@ -8,18 +8,33 @@ import BabyBrain
 
 func main(_ arguments: [String]) {
     let arguments = Arguments(arguments)
-    let versionOption = Arguments.Option.Mixed(shortKey: "v", longKey: "version")
+    let helpOption = Arguments.Option.Mixed(shortKey: "h", longKey: "help")
     func printVersion() {
-        print("Version 0.2.0")
+        print("Version 0.3.0")
         print("Created by nixzhu with love.")
     }
+    func printUsage() {
+        print("Usage: $ baby -i JSONFilePath")
+    }
+    func printHelp() {
+        print("-i (--input-file-path) JSONFilePath")
+        print("-h (--help)")
+        print("-v (--version)")
+    }
+    if arguments.containsOption(helpOption) {
+        print("Create models from a JSON file, even a Baby can do it.")
+        printHelp()
+        printVersion()
+        return
+    }
+    let versionOption = Arguments.Option.Mixed(shortKey: "v", longKey: "version")
     if arguments.containsOption(versionOption) {
         printVersion()
         return
     }
     let inputFilePathOption = Arguments.Option.Mixed(shortKey: "i", longKey: "input-file-path")
     guard let inputFilePath = arguments.valueOfOption(inputFilePathOption) else {
-        print("Usage: $ baby -i JSONFilePath")
+        printUsage()
         printVersion()
         return
     }
