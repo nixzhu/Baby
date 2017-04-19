@@ -41,7 +41,7 @@ func main(_ arguments: [String]) {
         return
     }
     if let (value, _) = parse(jsonString) {
-        let upgradedValue = value.upgraded(newName: "Model")
+        let upgradedValue = value.upgraded(newName: "MyModel")
         print(upgradedValue.swiftStructCode())
     } else {
         print("Invalid JSON!")

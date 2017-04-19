@@ -175,17 +175,28 @@ extension String {
         return String(self.characters.dropLast()) // TODO: better singularForm
     }
 
-    public var type: String {
-        return self.capitalized.components(separatedBy: "_").joined(separator: "") // TODO: better type
+    func capitalizingFirstLetter() -> String {
+        if let first = characters.first {
+            return String(first).uppercased() + String(characters.dropFirst())
+        } else {
+            return self
+        }
     }
 
-    public var propertyName: String {
-        let characters = type.characters
+    public var type: String {
+        return self.components(separatedBy: "_").joined().capitalizingFirstLetter() // TODO: better type
+    }
+
+    func lowercasingFirstLetter() -> String {
         if let first = characters.first {
             return String(first).lowercased() + String(characters.dropFirst())
         } else {
             return self
         }
+    }
+
+    public var propertyName: String {
+        return type.lowercasingFirstLetter()
     }
 }
 
