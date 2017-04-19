@@ -140,6 +140,7 @@ private let spaces: Parser<String> = {
     let whitespace = one(of: [
         character(" "),
         character("\t"),
+        character("\r"),
         character("\n"),
         ]
     )
