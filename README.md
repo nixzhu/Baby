@@ -14,6 +14,10 @@ bash install.sh
 $ baby -i JSONFilePath
 ```
 
+Or
+
+Try [Shared Baby](https://shared-baby.herokuapp.com) online.
+
 ## License
 
 MIT
