@@ -137,14 +137,16 @@ private func word(_ string: String) -> Parser<String> {
 // Helpers
 
 private let spaces: Parser<String> = {
-    let whitespace = one(of: [
+    let space = one(of: [
         character(" "),
+        character("\0"),
         character("\t"),
         character("\r"),
         character("\n"),
         ]
     )
-    return map(many(whitespace)) { String($0) }
+    let spaceString = map(space) { String($0) }
+    return map(many(or(spaceString, word("\r\n")))) { $0.joined() }
 }()
 
 // Parsers
