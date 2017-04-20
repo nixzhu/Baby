@@ -4,7 +4,7 @@
  */
 
 extension Value {
-    private func initializerCode(indentation: Indentation, meta: SwiftMeta) -> String {
+    private func initializerCode(indentation: Indentation, meta: Meta) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         var lines: [String] = []
@@ -23,7 +23,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    private func optionalInitialCodeInArray(indentation: Indentation, name: String) -> String {
+    private func optionalInitialCodeInArray(indentation: Indentation, meta: Meta, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
@@ -33,7 +33,7 @@ extension Value {
             lines.append("\(indent)let \(name.propertyName) = json[\"\(name)\"] as? [\(self.type)]")
         case .object:
             let jsonArray = "\(name.propertyName)JSONArray"
-            lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [[String: Any]]")
+            lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)]")
             lines.append("\(indent)let \(name.propertyName) = \(jsonArray).flatMap({ \(name.singularForm.type)(json: $0) }).flatMap({ $0 })")
         case .array:
             fatalError("Unsupported array in array!")
@@ -54,7 +54,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    private func optionalInitialCode(indentation: Indentation, key: String) -> String {
+    private func optionalInitialCode(indentation: Indentation, meta: Meta, key: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
@@ -66,11 +66,11 @@ extension Value {
             lines.append("\(indent)let \(key.propertyName) = json[\"\(key)\"] as? \(self.type)")
         case let .object(name, _):
             let jsonDictionary = "\(name.propertyName)JSONDictionary"
-            lines.append("\(indent)let \(jsonDictionary) = json[\"\(name)\"] as? [String: Any]")
+            lines.append("\(indent)let \(jsonDictionary) = json[\"\(name)\"] as? \(meta.jsonDictionaryName)")
             lines.append("\(indent)let \(name.propertyName) = \(jsonDictionary).flatMap({ \(name.type)(json: $0) })")
         case let .array(name, values):
             if let value = values.first {
-                lines.append(value.optionalInitialCodeInArray(indentation: indentation, name: name))
+                lines.append(value.optionalInitialCodeInArray(indentation: indentation, meta: meta, name: name))
             } else {
                 lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [Any] else { return nil }")
             }
@@ -91,7 +91,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    private func initialCodeInArray(indentation: Indentation, name: String) -> String {
+    private func initialCodeInArray(indentation: Indentation, meta: Meta, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
@@ -99,7 +99,7 @@ extension Value {
             lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
         case .object:
             let jsonArray = "\(name.propertyName)JSONArray"
-            lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [[String: Any]] else { return nil }")
+            lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)] else { return nil }")
             lines.append("\(indent)let \(name.propertyName) = \(jsonArray).map({ \(name.singularForm.type)(json: $0) }).flatMap({ $0 })")
         case .array:
             fatalError("Unsupported array in array!")
@@ -120,7 +120,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    private func initialCode(indentation: Indentation, key: String) -> String {
+    private func initialCode(indentation: Indentation, meta: Meta, key: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
@@ -128,7 +128,7 @@ extension Value {
             lines.append("\(indent)guard let \(key.propertyName) = json[\"\(key)\"] else { return nil }")
         case let .null(optionalValue):
             if let value = optionalValue {
-                lines.append(value.optionalInitialCode(indentation: indentation, key: key))
+                lines.append(value.optionalInitialCode(indentation: indentation, meta: meta, key: key))
             } else {
                 lines.append("\(indent)let \(key.propertyName) = json[\"\(key)\"]")
             }
@@ -136,11 +136,11 @@ extension Value {
             lines.append("\(indent)guard let \(key.propertyName) = json[\"\(key)\"] as? \(self.type) else { return nil }")
         case let .object(name, _):
             let jsonDictionary = "\(name.propertyName)JSONDictionary"
-            lines.append("\(indent)guard let \(jsonDictionary) = json[\"\(name)\"] as? [String: Any] else { return nil }")
+            lines.append("\(indent)guard let \(jsonDictionary) = json[\"\(name)\"] as? \(meta.jsonDictionaryName) else { return nil }")
             lines.append("\(indent)guard let \(name.propertyName) = \(name.type)(json: \(jsonDictionary)) else { return nil }")
         case let .array(name, values):
             if let value = values.first {
-                lines.append(value.initialCodeInArray(indentation: indentation, name: name))
+                lines.append(value.initialCodeInArray(indentation: indentation, meta: meta, name: name))
             } else {
                 lines.append("\(indent)guard let \(name.propertyName) = json[\"\(name)\"] as? [Any] else { return nil }")
             }
@@ -161,15 +161,15 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    private func failableInitializerCode(indentation: Indentation, meta: SwiftMeta) -> String {
+    private func failableInitializerCode(indentation: Indentation, meta: Meta) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         var lines: [String] = []
         switch self {
         case let .object(_, dictionary):
-            lines.append("\(indent)\(meta.publicCode)init?(json: [String: Any]) {")
+            lines.append("\(indent)\(meta.publicCode)init?(json: \(meta.jsonDictionaryName)) {")
             for (key, value) in dictionary {
-                lines.append(value.initialCode(indentation: indentation.deeper, key: key))
+                lines.append(value.initialCode(indentation: indentation.deeper, meta: meta, key: key))
             }
             let arguments = dictionary.keys.map({ "\($0.propertyName): \($0.propertyName)" }).joined(separator: ", ")
             lines.append("\(indent1)self.init(\(arguments))")
@@ -180,7 +180,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    public func swiftStructCode(indentation: Indentation = Indentation.default, meta: SwiftMeta = SwiftMeta.default) -> String {
+    public func swiftStructCode(indentation: Indentation = Indentation.default, meta: Meta = Meta.default) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         switch self {
