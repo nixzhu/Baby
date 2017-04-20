@@ -184,7 +184,7 @@ extension String {
     }
 
     public var type: String {
-        return self.components(separatedBy: "_").joined().capitalizingFirstLetter() // TODO: better type
+        return self.components(separatedBy: "_").map({ $0.capitalizingFirstLetter() }).joined().capitalizingFirstLetter() // TODO: better type
     }
 
     func lowercasingFirstLetter() -> String {
