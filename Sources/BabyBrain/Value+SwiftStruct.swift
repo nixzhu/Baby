@@ -4,14 +4,14 @@
  */
 
 extension Value {
-    private func initializerCode(indentation: Indentation) -> String {
+    private func initializerCode(indentation: Indentation, meta: SwiftMeta) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         var lines: [String] = []
         switch self {
         case let .object(_, dictionary):
             let arguments = dictionary.map({ "\($0.propertyName): \($1.type)" }).joined(separator: ", ")
-            lines.append("\(indent)init(\(arguments)) {")
+            lines.append("\(indent)\(meta.publicCode)init(\(arguments)) {")
             for (key, _) in dictionary {
                 let propertyName = key.propertyName
                 lines.append("\(indent1)self.\(propertyName) = \(propertyName)")
@@ -161,13 +161,13 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    private func failableInitializerCode(indentation: Indentation) -> String {
+    private func failableInitializerCode(indentation: Indentation, meta: SwiftMeta) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         var lines: [String] = []
         switch self {
         case let .object(_, dictionary):
-            lines.append("\(indent)init?(json: [String: Any]) {")
+            lines.append("\(indent)\(meta.publicCode)init?(json: [String: Any]) {")
             for (key, value) in dictionary {
                 lines.append(value.initialCode(indentation: indentation.deeper, key: key))
             }
@@ -180,24 +180,24 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    public func swiftStructCode(indentation: Indentation = Indentation.default) -> String {
+    public func swiftStructCode(indentation: Indentation = Indentation.default, meta: SwiftMeta = SwiftMeta.default) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         switch self {
         case let .null(optionalValue):
-            return optionalValue?.swiftStructCode(indentation: indentation) ?? ""
+            return optionalValue?.swiftStructCode(indentation: indentation, meta: meta) ?? ""
         case let .object(name, dictionary):
-            var lines: [String] = ["\(indent)struct \(name.type) {"]
+            var lines: [String] = ["\(indent)\(meta.publicCode)struct \(name.type) {"]
             for (key, value) in dictionary {
-                lines.append(value.swiftStructCode(indentation: indentation.deeper))
-                lines.append("\(indent1)let \(key.propertyName): \(value.type) ")
+                lines.append(value.swiftStructCode(indentation: indentation.deeper, meta: meta))
+                lines.append("\(indent1)\(meta.publicCode)let \(key.propertyName): \(value.type) ")
             }
-            lines.append(self.initializerCode(indentation: indentation.deeper))
-            lines.append(self.failableInitializerCode(indentation: indentation.deeper))
+            lines.append(self.initializerCode(indentation: indentation.deeper, meta: meta))
+            lines.append(self.failableInitializerCode(indentation: indentation.deeper, meta: meta))
             lines.append("\(indent)}")
             return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
         case let .array(_, values):
-            return values.first?.swiftStructCode(indentation: indentation) ?? ""
+            return values.first?.swiftStructCode(indentation: indentation, meta: meta) ?? ""
         default:
             return ""
         }
