@@ -17,9 +17,12 @@ func main(_ arguments: [String]) {
         print("Usage: $ baby -i JSONFilePath")
     }
     func printHelp() {
-        print("-i (--input-file-path) JSONFilePath")
-        print("-h (--help)")
-        print("-v (--version)")
+        print("-i, --input-file-path JSONFilePath")
+        print("--model-name ModelName")
+        print("--public")
+        print("--json-dictionary-name JSONDictionaryName")
+        print("-h, --help")
+        print("-v, --version")
     }
     if arguments.containsOption(helpOption) {
         print("Create models from a JSON file, even a Baby can do it.")
