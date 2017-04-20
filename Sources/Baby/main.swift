@@ -56,8 +56,15 @@ func main(_ arguments: [String]) {
         return
     }
     if let (value, _) = parse(jsonString) {
-        let upgradedValue = value.upgraded(newName: "MyModel")
-        print(upgradedValue.swiftStructCode())
+        let modelNameOption = Arguments.Option.Long(key: "model-name")
+        let modelName = arguments.valueOfOption(modelNameOption) ?? "MyModel"
+        let upgradedValue = value.upgraded(newName: modelName)
+        let publicOption = Arguments.Option.Long(key: "public")
+        let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
+        let isPublic = arguments.containsOption(publicOption)
+        let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
+        let meta = Meta(isPublic: isPublic, jsonDictionaryName: jsonDictionaryName)
+        print(upgradedValue.swiftStructCode(meta: meta))
     } else {
         print("Invalid JSON!")
     }
