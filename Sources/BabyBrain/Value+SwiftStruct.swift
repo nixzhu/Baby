@@ -187,7 +187,7 @@ extension Value {
         case let .null(optionalValue):
             return optionalValue?.swiftStructCode(indentation: indentation, meta: meta) ?? ""
         case let .object(name, dictionary):
-            var lines: [String] = ["\(indent)\(meta.publicCode)struct \(name.type) {"]
+            var lines: [String] = ["\(indent)\(meta.publicCode)\(meta.modelType) \(name.type) {"]
             for (key, value) in dictionary {
                 lines.append(value.swiftStructCode(indentation: indentation.deeper, meta: meta))
                 lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName): \(value.type) ")

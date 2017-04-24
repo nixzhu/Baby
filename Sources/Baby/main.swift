@@ -63,13 +63,16 @@ func main(_ arguments: [String]) {
         let modelName = arguments.valueOfOption(modelNameOption) ?? "MyModel"
         let upgradedValue = value.upgraded(newName: modelName)
         let publicOption = Arguments.Option.Long(key: "public")
+        let modelTypeOption = Arguments.Option.Long(key: "model-type")
         let varOption = Arguments.Option.Long(key: "var")
         let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
         let isPublic = arguments.containsOption(publicOption)
+        let modelType = arguments.valueOfOption(modelTypeOption) ?? "struct"
         let declareVariableProperties = arguments.containsOption(varOption)
         let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
         let meta = Meta(
             isPublic: isPublic,
+            modelType: modelType,
             declareVariableProperties: declareVariableProperties,
             jsonDictionaryName: jsonDictionaryName
         )

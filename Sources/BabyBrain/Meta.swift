@@ -5,11 +5,13 @@
 
 public struct Meta {
     let isPublic: Bool
+    let modelType: String
     let declareVariableProperties: Bool
     let jsonDictionaryName: String
 
-    public init(isPublic: Bool, declareVariableProperties: Bool, jsonDictionaryName: String) {
+    public init(isPublic: Bool, modelType: String, declareVariableProperties: Bool, jsonDictionaryName: String) {
         self.isPublic = isPublic
+        self.modelType = modelType
         self.declareVariableProperties = declareVariableProperties
         self.jsonDictionaryName = jsonDictionaryName
     }
@@ -17,6 +19,7 @@ public struct Meta {
     static var `default`: Meta {
         return Meta(
             isPublic: false,
+            modelType: "struct",
             declareVariableProperties: false,
             jsonDictionaryName: "[String: Any]"
         )
