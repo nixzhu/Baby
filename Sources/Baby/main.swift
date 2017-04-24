@@ -63,10 +63,16 @@ func main(_ arguments: [String]) {
         let modelName = arguments.valueOfOption(modelNameOption) ?? "MyModel"
         let upgradedValue = value.upgraded(newName: modelName)
         let publicOption = Arguments.Option.Long(key: "public")
+        let varOption = Arguments.Option.Long(key: "var")
         let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
         let isPublic = arguments.containsOption(publicOption)
+        let declareVariableProperties = arguments.containsOption(varOption)
         let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
-        let meta = Meta(isPublic: isPublic, jsonDictionaryName: jsonDictionaryName)
+        let meta = Meta(
+            isPublic: isPublic,
+            declareVariableProperties: declareVariableProperties,
+            jsonDictionaryName: jsonDictionaryName
+        )
         print(upgradedValue.swiftStructCode(meta: meta))
     } else {
         print("Invalid JSON!")

@@ -190,7 +190,7 @@ extension Value {
             var lines: [String] = ["\(indent)\(meta.publicCode)struct \(name.type) {"]
             for (key, value) in dictionary {
                 lines.append(value.swiftStructCode(indentation: indentation.deeper, meta: meta))
-                lines.append("\(indent1)\(meta.publicCode)let \(key.propertyName): \(value.type) ")
+                lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName): \(value.type) ")
             }
             lines.append(self.initializerCode(indentation: indentation.deeper, meta: meta))
             lines.append(self.failableInitializerCode(indentation: indentation.deeper, meta: meta))
