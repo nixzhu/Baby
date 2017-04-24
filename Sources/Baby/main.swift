@@ -10,7 +10,7 @@ func main(_ arguments: [String]) {
     let arguments = Arguments(arguments)
     let helpOption = Arguments.Option.Mixed(shortKey: "h", longKey: "help")
     func printVersion() {
-        print("Version 0.5.0")
+        print("Version 0.6.0")
         print("Created by nixzhu with love.")
     }
     func printUsage() {
@@ -18,8 +18,10 @@ func main(_ arguments: [String]) {
     }
     func printHelp() {
         print("-i, --input-file-path JSONFilePath")
-        print("--model-name ModelName")
         print("--public")
+        print("--model-type ModelType")
+        print("--model-name ModelName")
+        print("--var")
         print("--json-dictionary-name JSONDictionaryName")
         print("-h, --help")
         print("-v, --version")
