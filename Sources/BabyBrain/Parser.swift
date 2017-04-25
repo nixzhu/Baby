@@ -217,7 +217,7 @@ private let quotedString: Parser<String> = {
     }()
     let unicodeCharacter = map(unicodeString) { Character(UnicodeScalar(UInt32($0, radix: 16)!)!) }
     let letter = one(of: [unescapedCharacter, escapedCharacter, unicodeCharacter])
-    let _string = map(many1(letter)) { String($0) }
+    let _string = map(many(letter)) { String($0) }
     let quote = character("\"")
     return between(quote, _string, quote)
 }()
