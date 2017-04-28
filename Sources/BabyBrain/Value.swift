@@ -171,8 +171,20 @@ extension Value {
 }
 
 extension String {
-    public var singularForm: String {
-        return String(self.characters.dropLast()) // TODO: better singularForm
+    public var singularForm: String { // TODO: better singularForm
+        if hasSuffix("s") {
+            return String(characters.dropLast())
+        } else {
+            return self
+        }
+    }
+
+    public var type: String { // TODO: better type
+        return self.components(separatedBy: "_").map({ $0.capitalizingFirstLetter() }).joined().capitalizingFirstLetter()
+    }
+
+    public var propertyName: String {
+        return type.lowercasingFirstLetter()
     }
 
     func capitalizingFirstLetter() -> String {
@@ -183,20 +195,12 @@ extension String {
         }
     }
 
-    public var type: String {
-        return self.components(separatedBy: "_").map({ $0.capitalizingFirstLetter() }).joined().capitalizingFirstLetter() // TODO: better type
-    }
-
     func lowercasingFirstLetter() -> String {
         if let first = characters.first {
             return String(first).lowercased() + String(characters.dropFirst())
         } else {
             return self
         }
-    }
-
-    public var propertyName: String {
-        return type.lowercasingFirstLetter()
     }
 }
 
