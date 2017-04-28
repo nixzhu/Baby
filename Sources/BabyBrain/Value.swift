@@ -22,6 +22,7 @@ public enum Value {
     public enum DateType {
         case iso8601
         case dateOnly
+        case secondsSince1970
     }
     case date(type: DateType)
 }
@@ -110,6 +111,21 @@ extension Value {
 
     public func upgraded(newName: String) -> Value {
         switch self {
+        case .number(value: let number):
+            switch number {
+            case .int(let int):
+                if let dateType = int.dateType {
+                    return .date(type: dateType)
+                } else {
+                    return self
+                }
+            case .double(let double):
+                if let dateType = double.dateType {
+                    return .date(type: dateType)
+                } else {
+                    return self
+                }
+            }
         case .string(value: let value):
             if let url = URL(string: value), url.host != nil {
                 return .url(value: url)
@@ -229,6 +245,24 @@ extension String {
         }
         if DateFormatter.dateOnly.date(from: self) != nil {
             return .dateOnly
+        }
+        return nil
+    }
+}
+
+extension Int {
+    var dateType: Value.DateType? {
+        if self >= 1000000000 {
+            return .secondsSince1970
+        }
+        return nil
+    }
+}
+
+extension Double {
+    var dateType: Value.DateType? {
+        if self >= 1000000000 {
+            return .secondsSince1970
         }
         return nil
     }
