@@ -172,7 +172,9 @@ extension Value {
 
 extension String {
     public var singularForm: String { // TODO: better singularForm
-        if hasSuffix("s") {
+        if hasSuffix("list") {
+            return String(characters.dropLast(4))
+        } else if hasSuffix("s") {
             return String(characters.dropLast())
         } else {
             return self
