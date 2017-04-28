@@ -10,7 +10,7 @@ func main(_ arguments: [String]) {
     let arguments = Arguments(arguments)
     let helpOption = Arguments.Option.Mixed(shortKey: "h", longKey: "help")
     func printVersion() {
-        print("Version 0.7.0")
+        print("Version 0.8.0")
         print("Created by nixzhu with love.")
     }
     func printUsage() {
