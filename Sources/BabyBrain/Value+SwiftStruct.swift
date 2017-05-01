@@ -29,7 +29,19 @@ extension Value {
         switch self {
         case .empty:
             lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [Any]")
-        case .null, .bool, .number, .string:
+        case .null(let optionalValue):
+            if let value = optionalValue {
+                if case let .object(name, _) = value {
+                    let jsonArray = "\(name.propertyName(meta: meta))JSONArray"
+                    lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)?]")
+                    lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).flatMap({ $0.flatMap({ \(name.propertyName(meta: meta))(json: $0) }) })")
+                } else {
+                    lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)]")
+                }
+            } else {
+                lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)]")
+            }
+        case .bool, .number, .string:
             lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)]")
         case .object:
             let jsonArray = "\(name.propertyName(meta: meta))JSONArray"
@@ -107,7 +119,19 @@ extension Value {
         let indent = indentation.value
         var lines: [String] = []
         switch self {
-        case .empty, .null, .bool, .number, .string:
+        case let .null(optionalValue):
+            if let value = optionalValue {
+                if case let .object(name, _) = value {
+                    let jsonArray = "\(name.propertyName(meta: meta))JOSNArray"
+                    lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)?] else { return nil }")
+                    lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).map({ $0.flatMap({ \(name.propertyName(meta: meta))(json: $0) }) })")
+                } else {
+                    lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
+                }
+            } else {
+                lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
+            }
+        case .empty, .bool, .number, .string:
             lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
         case .object:
             let jsonArray = "\(name.propertyName(meta: meta))JSONArray"
