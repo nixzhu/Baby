@@ -32,9 +32,10 @@ extension Value {
         case .null(let optionalValue):
             if let value = optionalValue {
                 if case let .object(name, _) = value {
-                    let jsonArray = "\(name.propertyName(meta: meta))JSONArray"
+                    let propertyName = name.propertyName(meta: meta)
+                    let jsonArray = "\(propertyName)JSONArray"
                     lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)?]")
-                    lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).flatMap({ $0.flatMap({ \(name.propertyName(meta: meta))(json: $0) }) })")
+                    lines.append("\(indent)let \(propertyName) = \(jsonArray).flatMap({ $0.flatMap({ \(name.singularForm(meta: meta).type)(json: $0) }) })")
                 } else {
                     lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)]")
                 }
@@ -122,9 +123,10 @@ extension Value {
         case let .null(optionalValue):
             if let value = optionalValue {
                 if case let .object(name, _) = value {
-                    let jsonArray = "\(name.propertyName(meta: meta))JOSNArray"
+                    let propertyName = name.propertyName(meta: meta)
+                    let jsonArray = "\(propertyName)JSONArray"
                     lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)?] else { return nil }")
-                    lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).map({ $0.flatMap({ \(name.propertyName(meta: meta))(json: $0) }) })")
+                    lines.append("\(indent)let \(propertyName) = \(jsonArray).map({ $0.flatMap({ \(name.singularForm(meta: meta).type)(json: $0) }) })")
                 } else {
                     lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
                 }
