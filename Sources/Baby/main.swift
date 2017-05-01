@@ -23,6 +23,7 @@ func main(_ arguments: [String]) {
         print("--model-name ModelName")
         print("--var")
         print("--json-dictionary-name JSONDictionaryName")
+        print("--propertyMap a:b,c:d")
         print("-h, --help")
         print("-v, --version")
     }
@@ -68,16 +69,25 @@ func main(_ arguments: [String]) {
         let modelTypeOption = Arguments.Option.Long(key: "model-type")
         let varOption = Arguments.Option.Long(key: "var")
         let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
+        let propertyMapOption = Arguments.Option.Long(key: "propertyMap")
         let isPublic = arguments.containsOption(publicOption)
         let modelType = arguments.valueOfOption(modelTypeOption) ?? "struct"
         let declareVariableProperties = arguments.containsOption(varOption)
         let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
+        let propertyMapString = arguments.valueOfOption(propertyMapOption) ?? ""
+        var propertyMap: [String: String] = [:]
+        propertyMapString.components(separatedBy: ",").forEach {
+            let parts = $0.components(separatedBy: ":")
+            if parts.count == 2 {
+                propertyMap[parts[0]] = parts[1]
+            }
+        }
         let meta = Meta(
             isPublic: isPublic,
             modelType: modelType,
             declareVariableProperties: declareVariableProperties,
             jsonDictionaryName: jsonDictionaryName,
-            propertyMap: [:]
+            propertyMap: propertyMap
         )
         print(upgradedValue.swiftStructCode(meta: meta))
     } else {
