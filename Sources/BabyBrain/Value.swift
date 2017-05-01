@@ -109,7 +109,7 @@ extension Value {
         }
     }
 
-    public func upgraded(newName: String) -> Value {
+    public func upgraded(newName: String, arrayObjectNameMap: [String: String] ) -> Value {
         switch self {
         case .number(value: let number):
             switch number {
@@ -136,10 +136,10 @@ extension Value {
             }
         case .object(name: _, dictionary: let dictionary):
             var newDictionary: [String: Value] = [:]
-            dictionary.forEach { newDictionary[$0] = $1.upgraded(newName: $0) }
+            dictionary.forEach { newDictionary[$0] = $1.upgraded(newName: $0, arrayObjectNameMap: arrayObjectNameMap) }
             return .object(name: newName, dictionary: newDictionary)
         case .array(name: _, values: let values):
-            let newValues = values.map { $0.upgraded(newName: newName.singularForm) }
+            let newValues = values.map { $0.upgraded(newName: newName.singularForm(arrayObjectNameMap: arrayObjectNameMap), arrayObjectNameMap: arrayObjectNameMap) }
             let value = Value.mergedValue(of: newValues)
             return .array(name: newName, values: [value])
         default:
@@ -187,13 +187,20 @@ extension Value {
 }
 
 extension String {
-    public var singularForm: String { // TODO: better singularForm
-        if hasSuffix("list") {
-            return String(characters.dropLast(4))
-        } else if hasSuffix("s") {
-            return String(characters.dropLast())
+    public func singularForm(meta: Meta) -> String {
+        return singularForm(arrayObjectNameMap: meta.arrayObjectNameMap)
+    }
+    public func singularForm(arrayObjectNameMap: [String: String]) -> String { // TODO: better singularForm
+        if let name = arrayObjectNameMap[self] {
+            return name
         } else {
-            return self
+            if hasSuffix("list") {
+                return String(characters.dropLast(4))
+            } else if hasSuffix("s") {
+                return String(characters.dropLast())
+            } else {
+                return self
+            }
         }
     }
 

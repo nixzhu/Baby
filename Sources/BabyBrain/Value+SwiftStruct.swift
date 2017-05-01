@@ -34,7 +34,7 @@ extension Value {
         case .object:
             let jsonArray = "\(name.propertyName(meta: meta))JSONArray"
             lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)]")
-            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).flatMap({ \(name.singularForm.type)(json: $0) }).flatMap({ $0 })")
+            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).flatMap({ \(name.singularForm(meta: meta).type)(json: $0) }).flatMap({ $0 })")
         case .array:
             fatalError("Unsupported array in array!")
         case .url:
@@ -112,7 +112,7 @@ extension Value {
         case .object:
             let jsonArray = "\(name.propertyName(meta: meta))JSONArray"
             lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)] else { return nil }")
-            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).map({ \(name.singularForm.type)(json: $0) }).flatMap({ $0 })")
+            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).map({ \(name.singularForm(meta: meta).type)(json: $0) }).flatMap({ $0 })")
         case .array:
             fatalError("Unsupported array in array!")
         case .url:
