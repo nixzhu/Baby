@@ -31,7 +31,7 @@ extension Value {
             lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [Any]")
         case .null(let optionalValue):
             if let value = optionalValue {
-                if case let .object(name, _) = value {
+                if case .object = value {
                     let propertyName = name.propertyName(meta: meta)
                     let jsonArray = "\(propertyName)JSONArray"
                     lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)?]")
@@ -122,7 +122,7 @@ extension Value {
         switch self {
         case let .null(optionalValue):
             if let value = optionalValue {
-                if case let .object(name, _) = value {
+                if case .object = value {
                     let propertyName = name.propertyName(meta: meta)
                     let jsonArray = "\(propertyName)JSONArray"
                     lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)?] else { return nil }")
