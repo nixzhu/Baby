@@ -228,16 +228,16 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    public func swiftStructCode(indentation: Indentation = Indentation.default, meta: Meta = Meta.default) -> String {
+    public func swiftCode(indentation: Indentation = Indentation.default, meta: Meta = Meta.default) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         switch self {
         case let .null(optionalValue):
-            return optionalValue?.swiftStructCode(indentation: indentation, meta: meta) ?? ""
+            return optionalValue?.swiftCode(indentation: indentation, meta: meta) ?? ""
         case let .object(name, dictionary):
             var lines: [String] = ["\(indent)\(meta.publicCode)\(meta.modelType) \(name.type) {"]
             for (key, value) in dictionary {
-                lines.append(value.swiftStructCode(indentation: indentation.deeper, meta: meta))
+                lines.append(value.swiftCode(indentation: indentation.deeper, meta: meta))
                 lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type) ")
             }
             lines.append(self.initializerCode(indentation: indentation.deeper, meta: meta))
@@ -245,7 +245,7 @@ extension Value {
             lines.append("\(indent)}")
             return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
         case let .array(_, values):
-            return values.first?.swiftStructCode(indentation: indentation, meta: meta) ?? ""
+            return values.first?.swiftCode(indentation: indentation, meta: meta) ?? ""
         default:
             return ""
         }

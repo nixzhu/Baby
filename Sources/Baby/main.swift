@@ -99,7 +99,7 @@ func main(_ arguments: [String]) {
             propertyMap: propertyMap,
             arrayObjectNameMap: arrayObjectNameMap
         )
-        print(upgradedValue.swiftStructCode(meta: meta))
+        print(upgradedValue.swiftCode(meta: meta))
     } else {
         print("Invalid JSON!")
     }
