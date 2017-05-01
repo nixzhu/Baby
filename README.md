@@ -14,9 +14,11 @@ bash install.sh
 $ baby -i JSONFilePath
 ```
 
-Or
+Or, try [Shared Baby](https://shared-baby.herokuapp.com) online.
 
-Try [Shared Baby](https://shared-baby.herokuapp.com) online.
+## Contact
+
+You can find me on [Twitter](https://twitter.com/nixzhu) or [Weibo](https://weibo.com/nixzhu).
 
 ## License
 
