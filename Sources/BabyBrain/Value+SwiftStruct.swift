@@ -132,7 +132,7 @@ extension Value {
             case .secondsSince1970:
                 let dateTimeIntervals = "\(name.propertyName(meta: meta))TimeIntervals"
                 lines.append("\(indent)guard let \(dateTimeIntervals) = json[\"\(name)\"] as? [TimeInterval] else { return nil }")
-                lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(dateTimeIntervals).flatMap({ Date(timeIntervalSince1970: $0) })")
+                lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(dateTimeIntervals).map({ Date(timeIntervalSince1970: $0) })")
             }
         }
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
@@ -178,8 +178,8 @@ extension Value {
                 lines.append("\(indent)guard let \(key.propertyName(meta: meta)) = DateFormatter.dateOnly.date(from: \(dateString)) else { return nil }")
             case .secondsSince1970:
                 let dateTimeInterval = "\(key.propertyName(meta: meta))TimeInterval"
-                lines.append("\(indent)guard let \(dateTimeInterval) = json[\"\(key)\"] as? TimeInterval")
-                lines.append("\(indent)guard let \(key.propertyName(meta: meta)) = Date(timeIntervalSince1970: \(dateTimeInterval)) else { return nil }")
+                lines.append("\(indent)guard let \(dateTimeInterval) = json[\"\(key)\"] as? TimeInterval else { return nil }")
+                lines.append("\(indent)let \(key.propertyName(meta: meta)) = Date(timeIntervalSince1970: \(dateTimeInterval))")
             }
         }
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
