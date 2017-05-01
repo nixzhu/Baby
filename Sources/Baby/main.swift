@@ -76,7 +76,8 @@ func main(_ arguments: [String]) {
             isPublic: isPublic,
             modelType: modelType,
             declareVariableProperties: declareVariableProperties,
-            jsonDictionaryName: jsonDictionaryName
+            jsonDictionaryName: jsonDictionaryName,
+            propertyMap: [:]
         )
         print(upgradedValue.swiftStructCode(meta: meta))
     } else {

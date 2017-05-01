@@ -8,12 +8,14 @@ public struct Meta {
     let modelType: String
     let declareVariableProperties: Bool
     let jsonDictionaryName: String
+    let propertyMap: [String: String]
 
-    public init(isPublic: Bool, modelType: String, declareVariableProperties: Bool, jsonDictionaryName: String) {
+    public init(isPublic: Bool, modelType: String, declareVariableProperties: Bool, jsonDictionaryName: String, propertyMap: [String: String]) {
         self.isPublic = isPublic
         self.modelType = modelType
         self.declareVariableProperties = declareVariableProperties
         self.jsonDictionaryName = jsonDictionaryName
+        self.propertyMap = propertyMap
     }
 
     static var `default`: Meta {
@@ -21,7 +23,8 @@ public struct Meta {
             isPublic: false,
             modelType: "struct",
             declareVariableProperties: false,
-            jsonDictionaryName: "[String: Any]"
+            jsonDictionaryName: "[String: Any]",
+            propertyMap: [:]
         )
     }
 

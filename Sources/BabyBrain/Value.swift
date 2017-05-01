@@ -201,8 +201,12 @@ extension String {
         return self.components(separatedBy: "_").map({ $0.capitalizingFirstLetter() }).joined().capitalizingFirstLetter()
     }
 
-    public var propertyName: String {
-        return type.lowercasingFirstLetter()
+    public func propertyName(meta: Meta) -> String {
+        if let propertyName = meta.propertyMap[self] {
+            return propertyName
+        } else {
+            return type.lowercasingFirstLetter()
+        }
     }
 
     func capitalizingFirstLetter() -> String {
