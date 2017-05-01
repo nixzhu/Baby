@@ -24,6 +24,7 @@ func main(_ arguments: [String]) {
         print("--var")
         print("--json-dictionary-name JSONDictionaryName")
         print("--propertyMap a:b,c:d")
+        print("--arrayObjectMap skills:Skill,itemlist:Item")
         print("-h, --help")
         print("-v, --version")
     }
@@ -64,16 +65,16 @@ func main(_ arguments: [String]) {
     if let (value, _) = parse(jsonString) {
         let modelNameOption = Arguments.Option.Long(key: "model-name")
         let modelName = arguments.valueOfOption(modelNameOption) ?? "MyModel"
-        let arrayObjectNameMapOption = Arguments.Option.Long(key: "arrayObjectNameMap")
-        let arrayObjectNameMapString = arguments.valueOfOption(arrayObjectNameMapOption) ?? ""
-        var arrayObjectNameMap: [String: String] = [:]
-        arrayObjectNameMapString.components(separatedBy: ",").forEach {
+        let arrayObjectMapOption = Arguments.Option.Long(key: "arrayObjectMap")
+        let arrayObjectMapString = arguments.valueOfOption(arrayObjectMapOption) ?? ""
+        var arrayObjectMap: [String: String] = [:]
+        arrayObjectMapString.components(separatedBy: ",").forEach {
             let parts = $0.components(separatedBy: ":")
             if parts.count == 2 {
-                arrayObjectNameMap[parts[0]] = parts[1]
+                arrayObjectMap[parts[0]] = parts[1]
             }
         }
-        let upgradedValue = value.upgraded(newName: modelName, arrayObjectNameMap: arrayObjectNameMap)
+        let upgradedValue = value.upgraded(newName: modelName, arrayObjectMap: arrayObjectMap)
         let publicOption = Arguments.Option.Long(key: "public")
         let modelTypeOption = Arguments.Option.Long(key: "model-type")
         let varOption = Arguments.Option.Long(key: "var")
@@ -97,7 +98,7 @@ func main(_ arguments: [String]) {
             declareVariableProperties: declareVariableProperties,
             jsonDictionaryName: jsonDictionaryName,
             propertyMap: propertyMap,
-            arrayObjectNameMap: arrayObjectNameMap
+            arrayObjectMap: arrayObjectMap
         )
         print(upgradedValue.swiftCode(meta: meta))
     } else {

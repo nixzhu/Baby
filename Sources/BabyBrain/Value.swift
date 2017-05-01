@@ -109,7 +109,7 @@ extension Value {
         }
     }
 
-    public func upgraded(newName: String, arrayObjectNameMap: [String: String] ) -> Value {
+    public func upgraded(newName: String, arrayObjectMap: [String: String] ) -> Value {
         switch self {
         case .number(value: let number):
             switch number {
@@ -136,10 +136,10 @@ extension Value {
             }
         case .object(name: _, dictionary: let dictionary):
             var newDictionary: [String: Value] = [:]
-            dictionary.forEach { newDictionary[$0] = $1.upgraded(newName: $0, arrayObjectNameMap: arrayObjectNameMap) }
+            dictionary.forEach { newDictionary[$0] = $1.upgraded(newName: $0, arrayObjectMap: arrayObjectMap) }
             return .object(name: newName, dictionary: newDictionary)
         case .array(name: _, values: let values):
-            let newValues = values.map { $0.upgraded(newName: newName.singularForm(arrayObjectNameMap: arrayObjectNameMap), arrayObjectNameMap: arrayObjectNameMap) }
+            let newValues = values.map { $0.upgraded(newName: newName.singularForm(arrayObjectMap: arrayObjectMap), arrayObjectMap: arrayObjectMap) }
             let value = Value.mergedValue(of: newValues)
             return .array(name: newName, values: [value])
         default:
@@ -188,10 +188,10 @@ extension Value {
 
 extension String {
     public func singularForm(meta: Meta) -> String {
-        return singularForm(arrayObjectNameMap: meta.arrayObjectNameMap)
+        return singularForm(arrayObjectMap: meta.arrayObjectMap)
     }
-    public func singularForm(arrayObjectNameMap: [String: String]) -> String { // TODO: better singularForm
-        if let name = arrayObjectNameMap[self] {
+    public func singularForm(arrayObjectMap: [String: String]) -> String { // TODO: better singularForm
+        if let name = arrayObjectMap[self] {
             return name
         } else {
             if hasSuffix("list") {
