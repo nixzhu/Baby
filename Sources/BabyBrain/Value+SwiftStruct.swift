@@ -240,7 +240,7 @@ extension Value {
             var lines: [String] = ["\(indent)\(meta.publicCode)\(meta.modelType) \(name.type) {"]
             for (key, value) in dictionary {
                 lines.append(value.swiftCode(indentation: indentation.deeper, meta: meta))
-                lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type) ")
+                lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type)")
             }
             lines.append(self.initializerCode(indentation: indentation.deeper, meta: meta))
             lines.append(self.failableInitializerCode(indentation: indentation.deeper, meta: meta))

@@ -265,3 +265,26 @@ public func parse(_ input: String) -> (Value, String)? {
     guard let (result, remainder) = value(input.characters) else { return nil }
     return (result, String(remainder))
 }
+
+// Map
+
+private let pair: Parser<(String, String)> = {
+    let letter = satisfy({ $0 != "," && $0 != ":" })
+    let colon = character(":")
+    let string = map(many1(letter)) { String($0) }
+    let word = eatRight(eatLeft(spaces, string), spaces)
+    return map(and(and(word, colon), word)) { ($0.0, $1) }
+}()
+
+private let pairs: Parser<[(String, String)]> = {
+    return list(pair, character(","))
+}()
+
+public func map(of input: String) -> [String: String] {
+    guard let (result, _) = pairs(input.characters) else { return [:] }
+    var map: [String: String] = [:]
+    result.forEach { key, value in
+        map[key] = value
+    }
+    return map
+}

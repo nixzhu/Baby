@@ -67,13 +67,7 @@ func main(_ arguments: [String]) {
         let modelName = arguments.valueOfOption(modelNameOption) ?? "MyModel"
         let arrayObjectMapOption = Arguments.Option.Long(key: "arrayObjectMap")
         let arrayObjectMapString = arguments.valueOfOption(arrayObjectMapOption) ?? ""
-        var arrayObjectMap: [String: String] = [:]
-        arrayObjectMapString.components(separatedBy: ",").forEach {
-            let parts = $0.components(separatedBy: ":")
-            if parts.count == 2 {
-                arrayObjectMap[parts[0]] = parts[1]
-            }
-        }
+        let arrayObjectMap = map(of: arrayObjectMapString)
         let upgradedValue = value.upgraded(newName: modelName, arrayObjectMap: arrayObjectMap)
         let publicOption = Arguments.Option.Long(key: "public")
         let modelTypeOption = Arguments.Option.Long(key: "model-type")
@@ -85,13 +79,7 @@ func main(_ arguments: [String]) {
         let declareVariableProperties = arguments.containsOption(varOption)
         let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
         let propertyMapString = arguments.valueOfOption(propertyMapOption) ?? ""
-        var propertyMap: [String: String] = [:]
-        propertyMapString.components(separatedBy: ",").forEach {
-            let parts = $0.components(separatedBy: ":")
-            if parts.count == 2 {
-                propertyMap[parts[0]] = parts[1]
-            }
-        }
+        let propertyMap = map(of: propertyMapString)
         let meta = Meta(
             isPublic: isPublic,
             modelType: modelType,
