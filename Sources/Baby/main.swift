@@ -10,7 +10,7 @@ func main(_ arguments: [String]) {
     let arguments = Arguments(arguments)
     let helpOption = Arguments.Option.Mixed(shortKey: "h", longKey: "help")
     func printVersion() {
-        print("Version 0.12.0")
+        print("Version 0.13.0")
         print("Created by nixzhu with love.")
     }
     func printUsage() {
@@ -23,8 +23,8 @@ func main(_ arguments: [String]) {
         print("--model-name ModelName")
         print("--var")
         print("--json-dictionary-name JSONDictionaryName")
-        print("--propertyMap a:b,c:d")
-        print("--arrayObjectMap skills:Skill,itemlist:Item")
+        print("--propertyMap \"a: b, c: d\"")
+        print("--arrayObjectMap \"skills: Skill, itemlist: Item\"")
         print("-h, --help")
         print("-v, --version")
     }
