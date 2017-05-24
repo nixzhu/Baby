@@ -102,10 +102,12 @@ extension Value {
             guard nameA == nameB else { fatalError("Unsupported array merge!") }
             let value = Value.mergedValue(of: valuesA + valuesB)
             return .array(name: nameA, values: [value])
-        case (.url(let valueA), .url):
+        case (let .url(valueA), .url):
             return .url(value: valueA)
+        case (let .date(typeA), .date):
+            return .date(type: typeA)
         default:
-            fatalError("Unsupported merge!")
+            fatalError("Unsupported merge! \(self), \(other)")
         }
     }
 
