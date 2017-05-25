@@ -106,6 +106,10 @@ extension Value {
             return .url(value: valueA)
         case (let .date(typeA), .date):
             return .date(type: typeA)
+        case (.url, let .string(value)):
+            return .string(value: value)
+        case (let .string(value), .url):
+            return .string(value: value)
         default:
             fatalError("Unsupported merge! \(self), \(other)")
         }
@@ -128,8 +132,8 @@ extension Value {
                     return self
                 }
             }
-        case .string(value: let value):
-            if let url = URL(string: value), url.host != nil {
+        case .string(let value):
+            if let url = URL(string: value) {
                 return .url(value: url)
             } else if let dateType = value.dateType {
                 return .date(type: dateType)
