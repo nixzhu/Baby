@@ -133,7 +133,7 @@ extension Value {
                 }
             }
         case .string(let value):
-            if let url = URL(string: value) {
+            if let url = URL(string: value), url.host != nil { // TODO: better url detect
                 return .url(value: url)
             } else if let dateType = value.dateType {
                 return .date(type: dateType)
