@@ -249,16 +249,27 @@ extension Value {
                 lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type)")
             }
             if meta.codable {
-                lines.append("\(indent1)private enum CodingKeys: String, CodingKey {")
-                for key in dictionary.keys {
-                    let propertyName = key.propertyName(meta: meta)
-                    if propertyName == key {
-                        lines.append("\(indent2)case \(propertyName)")
-                    } else {
-                        lines.append("\(indent2)case \(propertyName) = \"\(key)\"")
+                func needCodingKeys(with dictionary: [String: Any]) -> Bool {
+                    for key in dictionary.keys {
+                        let propertyName = key.propertyName(meta: meta)
+                        if propertyName != key {
+                            return true
+                        }
                     }
+                    return false
                 }
-                lines.append("\(indent1)}")
+                if needCodingKeys(with: dictionary) {
+                    lines.append("\(indent1)private enum CodingKeys: String, CodingKey {")
+                    for key in dictionary.keys {
+                        let propertyName = key.propertyName(meta: meta)
+                        if propertyName == key {
+                            lines.append("\(indent2)case \(propertyName)")
+                        } else {
+                            lines.append("\(indent2)case \(propertyName) = \"\(key)\"")
+                        }
+                    }
+                    lines.append("\(indent1)}")
+                }
             } else {
                 lines.append(self.initializerCode(indentation: indentation.deeper, meta: meta))
                 lines.append(self.failableInitializerCode(indentation: indentation.deeper, meta: meta))
