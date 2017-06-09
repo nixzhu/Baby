@@ -71,11 +71,13 @@ func main(_ arguments: [String]) {
         let upgradedValue = value.upgraded(newName: modelName, arrayObjectMap: arrayObjectMap)
         let publicOption = Arguments.Option.Long(key: "public")
         let modelTypeOption = Arguments.Option.Long(key: "model-type")
+        let codableOption = Arguments.Option.Long(key: "codable")
         let varOption = Arguments.Option.Long(key: "var")
         let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
         let propertyMapOption = Arguments.Option.Long(key: "propertyMap")
         let isPublic = arguments.containsOption(publicOption)
         let modelType = arguments.valueOfOption(modelTypeOption) ?? "struct"
+        let codable = arguments.containsOption(codableOption)
         let declareVariableProperties = arguments.containsOption(varOption)
         let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
         let propertyMapString = arguments.valueOfOption(propertyMapOption) ?? ""
@@ -83,7 +85,7 @@ func main(_ arguments: [String]) {
         let meta = Meta(
             isPublic: isPublic,
             modelType: modelType,
-            codable: true,
+            codable: codable,
             declareVariableProperties: declareVariableProperties,
             jsonDictionaryName: jsonDictionaryName,
             propertyMap: propertyMap,
