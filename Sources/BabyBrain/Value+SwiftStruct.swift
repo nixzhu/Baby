@@ -251,7 +251,12 @@ extension Value {
             if meta.codable {
                 lines.append("\(indent1)private enum CodingKeys: String, CodingKey {")
                 for key in dictionary.keys {
-                    lines.append("\(indent2)case \(key.propertyName(meta: meta)) = \"\(key)\"")
+                    let propertyName = key.propertyName(meta: meta)
+                    if propertyName == key {
+                        lines.append("\(indent2)case \(propertyName)")
+                    } else {
+                        lines.append("\(indent2)case \(propertyName) = \"\(key)\"")
+                    }
                 }
                 lines.append("\(indent1)}")
             } else {
