@@ -233,6 +233,7 @@ extension Value {
     public func swiftCode(indentation: Indentation = Indentation.default, meta: Meta = Meta.default) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
+        let indent2 = indentation.deeper.deeper.value
         switch self {
         case let .null(optionalValue):
             return optionalValue?.swiftCode(indentation: indentation, meta: meta) ?? ""
@@ -247,7 +248,13 @@ extension Value {
                 lines.append(value.swiftCode(indentation: indentation.deeper, meta: meta))
                 lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type)")
             }
-            if !meta.codable {
+            if meta.codable {
+                lines.append("\(indent1)private enum CodingKeys: String, CodingKey {")
+                for key in dictionary.keys {
+                    lines.append("\(indent2)case \(key.propertyName(meta: meta)) = \"\(key)\"")
+                }
+                lines.append("\(indent1)}")
+            } else {
                 lines.append(self.initializerCode(indentation: indentation.deeper, meta: meta))
                 lines.append(self.failableInitializerCode(indentation: indentation.deeper, meta: meta))
             }
