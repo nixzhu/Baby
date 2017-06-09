@@ -237,13 +237,20 @@ extension Value {
         case let .null(optionalValue):
             return optionalValue?.swiftCode(indentation: indentation, meta: meta) ?? ""
         case let .object(name, dictionary):
-            var lines: [String] = ["\(indent)\(meta.publicCode)\(meta.modelType) \(name.type) {"]
+            var lines: [String] = []
+            if meta.codable {
+                lines.append("\(indent)\(meta.publicCode)\(meta.modelType) \(name.type): Codable {")
+            } else {
+                lines.append("\(indent)\(meta.publicCode)\(meta.modelType) \(name.type) {")
+            }
             for (key, value) in dictionary {
                 lines.append(value.swiftCode(indentation: indentation.deeper, meta: meta))
                 lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type)")
             }
-            lines.append(self.initializerCode(indentation: indentation.deeper, meta: meta))
-            lines.append(self.failableInitializerCode(indentation: indentation.deeper, meta: meta))
+            if !meta.codable {
+                lines.append(self.initializerCode(indentation: indentation.deeper, meta: meta))
+                lines.append(self.failableInitializerCode(indentation: indentation.deeper, meta: meta))
+            }
             lines.append("\(indent)}")
             return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
         case let .array(_, values):

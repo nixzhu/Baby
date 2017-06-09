@@ -83,6 +83,7 @@ func main(_ arguments: [String]) {
         let meta = Meta(
             isPublic: isPublic,
             modelType: modelType,
+            codable: true,
             declareVariableProperties: declareVariableProperties,
             jsonDictionaryName: jsonDictionaryName,
             propertyMap: propertyMap,
