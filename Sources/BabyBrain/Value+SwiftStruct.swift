@@ -12,7 +12,7 @@ extension Value {
         case let .object(_, dictionary, keys):
             let arguments = keys.map({ "\($0.propertyName(meta: meta)): \(dictionary[$0]!.type)" }).joined(separator: ", ")
             lines.append("\(indent)\(meta.publicCode)init(\(arguments)) {")
-            for (key, _) in dictionary {
+            for key in keys {
                 let propertyName = key.propertyName(meta: meta)
                 lines.append("\(indent1)self.\(propertyName) = \(propertyName)")
             }
