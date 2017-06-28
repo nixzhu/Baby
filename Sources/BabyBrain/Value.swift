@@ -15,7 +15,7 @@ public enum Value {
     }
     case number(value: Number)
     case string(value: String)
-    indirect case object(name: String, dictionary: [String: Value])
+    indirect case object(name: String, dictionary: [String: Value], keys: [String])
     indirect case array(name: String, values: [Value])
     // hyper types
     case url(value: URL)
@@ -78,7 +78,7 @@ extension Value {
         case (let .string(valueA), let .string(valueB)):
             let value = valueA.isEmpty ? valueB : valueA
             return .string(value: value)
-        case (let .object(nameA, dictionaryA), let .object(nameB, dictionaryB)):
+        case (let .object(nameA, dictionaryA, keysA), let .object(nameB, dictionaryB, keysB)):
             guard nameA == nameB else { fatalError("Unsupported object merge!") }
             var dictionary = dictionaryA
             for key in dictionaryA.keys {
@@ -97,7 +97,13 @@ extension Value {
                     dictionary[key] = .null(optionalValue: valueB)
                 }
             }
-            return .object(name: nameA, dictionary: dictionary)
+            var keys = keysA
+            for key in keysB {
+                if !keys.contains(key) {
+                    keys.append(key)
+                }
+            }
+            return .object(name: nameA, dictionary: dictionary, keys: keys)
         case (let .array(nameA, valuesA), let .array(nameB, valuesB)):
             guard nameA == nameB else { fatalError("Unsupported array merge!") }
             let value = Value.mergedValue(of: valuesA + valuesB)
@@ -117,8 +123,8 @@ extension Value {
 
     public func upgraded(newName: String, arrayObjectMap: [String: String] ) -> Value {
         switch self {
-        case .number(value: let number):
-            switch number {
+        case let .number(value):
+            switch value {
             case .int(let int):
                 if let dateType = int.dateType {
                     return .date(type: dateType)
@@ -132,7 +138,7 @@ extension Value {
                     return self
                 }
             }
-        case .string(let value):
+        case let .string(value):
             if let url = URL(string: value), url.host != nil { // TODO: better url detect
                 return .url(value: url)
             } else if let dateType = value.dateType {
@@ -140,11 +146,11 @@ extension Value {
             } else {
                 return self
             }
-        case .object(name: _, dictionary: let dictionary):
+        case let .object(_, dictionary, keys):
             var newDictionary: [String: Value] = [:]
             dictionary.forEach { newDictionary[$0] = $1.upgraded(newName: $0, arrayObjectMap: arrayObjectMap) }
-            return .object(name: newName, dictionary: newDictionary)
-        case .array(name: _, values: let values):
+            return .object(name: newName, dictionary: newDictionary, keys: keys)
+        case let .array(_, values):
             let newValues = values.map { $0.upgraded(newName: newName.singularForm(arrayObjectMap: arrayObjectMap), arrayObjectMap: arrayObjectMap) }
             let value = Value.mergedValue(of: newValues)
             return .array(name: newName, values: [value])
@@ -176,7 +182,7 @@ extension Value {
             }
         case .string:
             return "String"
-        case let .object(name, _):
+        case let .object(name, _, _):
             return name.type
         case let .array(_, values):
             if let value = values.first {

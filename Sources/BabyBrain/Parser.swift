@@ -243,10 +243,11 @@ private let object: Parser<Value> = {
     let keyValues = list(keyValue, comma)
     return map(between(beginObject, optional(keyValues), endObject)) {
         var dictionary: [String: Value] = [:]
-        for (key, value) in ($0 ?? []) {
+        let keyValues = $0 ?? []
+        for (key, value) in keyValues {
             dictionary[key] = value
         }
-        return Value.object(name: "Object", dictionary: dictionary)
+        return Value.object(name: "Object", dictionary: dictionary, keys: keyValues.map({ $0.0 }))
     }
 }()
 

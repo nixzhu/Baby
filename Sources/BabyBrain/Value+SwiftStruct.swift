@@ -9,8 +9,8 @@ extension Value {
         let indent1 = indentation.deeper.value
         var lines: [String] = []
         switch self {
-        case let .object(_, dictionary):
-            let arguments = dictionary.map({ "\($0.propertyName(meta: meta)): \($1.type)" }).joined(separator: ", ")
+        case let .object(_, dictionary, keys):
+            let arguments = keys.map({ "\($0.propertyName(meta: meta)): \(dictionary[$0]!.type)" }).joined(separator: ", ")
             lines.append("\(indent)\(meta.publicCode)init(\(arguments)) {")
             for (key, _) in dictionary {
                 let propertyName = key.propertyName(meta: meta)
@@ -83,7 +83,7 @@ extension Value {
             lines.append("\(indent)let \(key.propertyName(meta: meta)) = json[\"\(key)\"]")
         case .bool, .number, .string:
             lines.append("\(indent)let \(key.propertyName(meta: meta)) = json[\"\(key)\"] as? \(self.type)")
-        case let .object(name, _):
+        case let .object(name, _, _):
             let jsonDictionary = "\(name.propertyName(meta: meta))JSONDictionary"
             lines.append("\(indent)let \(jsonDictionary) = json[\"\(name)\"] as? \(meta.jsonDictionaryName)")
             lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonDictionary).flatMap({ \(name.type)(json: $0) })")
@@ -178,7 +178,7 @@ extension Value {
             }
         case .bool, .number, .string:
             lines.append("\(indent)guard let \(key.propertyName(meta: meta)) = json[\"\(key)\"] as? \(self.type) else { return nil }")
-        case let .object(name, _):
+        case let .object(name, _, _):
             let jsonDictionary = "\(name.propertyName(meta: meta))JSONDictionary"
             lines.append("\(indent)guard let \(jsonDictionary) = json[\"\(name)\"] as? \(meta.jsonDictionaryName) else { return nil }")
             lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = \(name.type)(json: \(jsonDictionary)) else { return nil }")
@@ -216,12 +216,13 @@ extension Value {
         let indent1 = indentation.deeper.value
         var lines: [String] = []
         switch self {
-        case let .object(_, dictionary):
+        case let .object(_, dictionary, keys):
             lines.append("\(indent)\(meta.publicCode)init?(json: \(meta.jsonDictionaryName)) {")
-            for (key, value) in dictionary {
+            for key in keys {
+                let value = dictionary[key]!
                 lines.append(value.initialCode(indentation: indentation.deeper, meta: meta, key: key))
             }
-            let arguments = dictionary.keys.map({ "\($0.propertyName(meta: meta)): \($0.propertyName(meta: meta))" }).joined(separator: ", ")
+            let arguments = keys.map({ "\($0.propertyName(meta: meta)): \($0.propertyName(meta: meta))" }).joined(separator: ", ")
             lines.append("\(indent1)self.init(\(arguments))")
         default:
             break
@@ -237,20 +238,21 @@ extension Value {
         switch self {
         case let .null(optionalValue):
             return optionalValue?.swiftCode(indentation: indentation, meta: meta) ?? ""
-        case let .object(name, dictionary):
+        case let .object(name, dictionary, keys):
             var lines: [String] = []
             if meta.codable {
                 lines.append("\(indent)\(meta.publicCode)\(meta.modelType) \(name.type): Codable {")
             } else {
                 lines.append("\(indent)\(meta.publicCode)\(meta.modelType) \(name.type) {")
             }
-            for (key, value) in dictionary {
+            for key in keys {
+                let value = dictionary[key]!
                 lines.append(value.swiftCode(indentation: indentation.deeper, meta: meta))
                 lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type)")
             }
             if meta.codable {
                 func needCodingKeys(with dictionary: [String: Any]) -> Bool {
-                    for key in dictionary.keys {
+                    for key in keys {
                         let propertyName = key.propertyName(meta: meta)
                         if propertyName != key {
                             return true
@@ -260,7 +262,7 @@ extension Value {
                 }
                 if needCodingKeys(with: dictionary) {
                     lines.append("\(indent1)private enum CodingKeys: String, CodingKey {")
-                    for key in dictionary.keys {
+                    for key in keys {
                         let propertyName = key.propertyName(meta: meta)
                         if propertyName == key {
                             lines.append("\(indent2)case \(propertyName)")
