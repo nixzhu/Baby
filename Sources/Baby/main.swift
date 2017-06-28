@@ -10,7 +10,7 @@ func main(_ arguments: [String]) {
     let arguments = Arguments(arguments)
     let helpOption = Arguments.Option.Mixed(shortKey: "h", longKey: "help")
     func printVersion() {
-        print("Version 0.17.0")
+        print("Version 0.18.0")
         print("Created by nixzhu with love.")
     }
     func printUsage() {
@@ -24,8 +24,8 @@ func main(_ arguments: [String]) {
         print("--codable")
         print("--var")
         print("--json-dictionary-name JSONDictionaryName")
-        print("--propertyMap \"a: b, c: d\"")
-        print("--arrayObjectMap \"skills: Skill, itemlist: Item\"")
+        print("--property-map \"a: b, c: d\"")
+        print("--array-object-map \"skills: Skill, itemlist: Item\"")
         print("-h, --help")
         print("-v, --version")
     }
@@ -66,7 +66,7 @@ func main(_ arguments: [String]) {
     if let (value, _) = parse(jsonString) {
         let modelNameOption = Arguments.Option.Long(key: "model-name")
         let modelName = arguments.valueOfOption(modelNameOption) ?? "MyModel"
-        let arrayObjectMapOption = Arguments.Option.Long(key: "arrayObjectMap")
+        let arrayObjectMapOption = Arguments.Option.Long(key: "array-object-map")
         let arrayObjectMapString = arguments.valueOfOption(arrayObjectMapOption) ?? ""
         let arrayObjectMap = map(of: arrayObjectMapString)
         let upgradedValue = value.upgraded(newName: modelName, arrayObjectMap: arrayObjectMap)
@@ -75,7 +75,7 @@ func main(_ arguments: [String]) {
         let codableOption = Arguments.Option.Long(key: "codable")
         let varOption = Arguments.Option.Long(key: "var")
         let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
-        let propertyMapOption = Arguments.Option.Long(key: "propertyMap")
+        let propertyMapOption = Arguments.Option.Long(key: "property-map")
         let isPublic = arguments.containsOption(publicOption)
         let modelType = arguments.valueOfOption(modelTypeOption) ?? "struct"
         let codable = arguments.containsOption(codableOption)
