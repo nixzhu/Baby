@@ -5,13 +5,19 @@ Create models from a JSON file, even a Baby can do it.
 ## Install
 
 ```bash
-bash install.sh
+$ bash install.sh
 ```
 
 ## Run
 
-```
+``` bash
 $ baby -i JSONFilePath
+```
+
+## Help
+
+``` bash
+$ baby --help
 ```
 
 Or, try [Shared Baby](https://shared-baby.herokuapp.com) online.
