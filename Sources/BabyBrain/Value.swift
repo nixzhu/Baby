@@ -81,20 +81,20 @@ extension Value {
         case (let .object(nameA, dictionaryA, keysA), let .object(nameB, dictionaryB, keysB)):
             guard nameA == nameB else { fatalError("Unsupported object merge!") }
             var dictionary = dictionaryA
-            for key in dictionaryA.keys {
+            for key in keysA {
                 let valueA = dictionaryA[key]!
                 if let valueB = dictionaryB[key] {
                     dictionary[key] = valueA.merge(valueB)
                 } else {
-                    dictionary[key] = .null(optionalValue: valueA)
+                    dictionary[key] = valueA.isNull ? valueA : .null(optionalValue: valueA)
                 }
             }
-            for key in dictionaryB.keys {
+            for key in keysB {
                 let valueB = dictionaryB[key]!
                 if let valueA = dictionaryA[key] {
                     dictionary[key] = valueB.merge(valueA)
                 } else {
-                    dictionary[key] = .null(optionalValue: valueB)
+                    dictionary[key] = valueB.isNull ? valueB : .null(optionalValue: valueB)
                 }
             }
             var keys = keysA
@@ -194,6 +194,17 @@ extension Value {
             return "URL"
         case .date:
             return "Date"
+        }
+    }
+}
+
+extension Value {
+    var isNull: Bool {
+        switch self {
+        case .null:
+            return true
+        default:
+            return false
         }
     }
 }
