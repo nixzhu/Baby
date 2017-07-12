@@ -20,7 +20,7 @@ $ baby -i JSONFilePath
 $ baby --help
 ```
 
-Or, try [Shared Baby](https://shared-baby.herokuapp.com) online.
+Or, try Baby's web interface [SharedBaby](https://github.com/nixzhu/SharedBaby).
 
 ## Contact
 
