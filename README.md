@@ -43,6 +43,43 @@ struct User: Codable {
 }
 ```
 
+Swift code without `Codable`:
+
+``` swift
+struct User {
+    let id: Int
+    let name: String
+    struct Twitter {
+        let profileURL: URL
+        let createdAt: Date
+        init(profileURL: URL, createdAt: Date) {
+            self.profileURL = profileURL
+            self.createdAt = createdAt
+        }
+        init?(json: [String: Any]) {
+            guard let profileURLString = json["profile_url"] as? String else { return nil }
+            guard let profileURL = URL(string: profileURLString) else { return nil }
+            guard let createdAtString = json["created_at"] as? String else { return nil }
+            guard let createdAt = DateFormatter.iso8601.date(from: createdAtString) else { return nil }
+            self.init(profileURL: profileURL, createdAt: createdAt)
+        }
+    }
+    let twitter: Twitter
+    init(id: Int, name: String, twitter: Twitter) {
+        self.id = id
+        self.name = name
+        self.twitter = twitter
+    }
+    init?(json: [String: Any]) {
+        guard let id = json["id"] as? Int else { return nil }
+        guard let name = json["name"] as? String else { return nil }
+        guard let twitterJSONDictionary = json["twitter"] as? [String: Any] else { return nil }
+        guard let twitter = Twitter(json: twitterJSONDictionary) else { return nil }
+        self.init(id: id, name: name, twitter: twitter)
+    }
+}
+```
+
 Note that I use **Property Map** `profile_url: profileURL` to change the property name (Automatically generated will be `profileUrl`).
 
 Baby can also handle array root json, it will automatically merge properties for objects in array.
@@ -72,6 +109,10 @@ Or, try Baby's web interface [SharedBaby](https://github.com/nixzhu/SharedBaby).
 ## Contact
 
 You can find me on [Twitter](https://twitter.com/nixzhu) or [Weibo](https://weibo.com/nixzhu).
+
+## Donation
+
+BitCoin: `1EcDVcsQPeg7QVGdCFkQpHXKQMjPJmbixz`
 
 ## License
 
