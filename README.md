@@ -113,7 +113,7 @@ $ bash install.sh
 $ baby -i JSONFilePath
 ```
 
-## Help
+### Help
 
 ``` bash
 $ baby --help
