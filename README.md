@@ -43,7 +43,7 @@ struct User: Codable {
 }
 ```
 
-Note that I use **Property Map** `profile_url: profileURL` to change the property name (Automatically generated will be `profileUrl`).
+Note that there use **Property Map** `profile_url: profileURL` to change the property name (Automatically generated will be `profileUrl`).
 
 Swift code without `Codable`:
 
