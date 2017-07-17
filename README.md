@@ -43,6 +43,8 @@ struct User: Codable {
 }
 ```
 
+Note that I use **Property Map** `profile_url: profileURL` to change the property name (Automatically generated will be `profileUrl`).
+
 Swift code without `Codable`:
 
 ``` swift
@@ -80,7 +82,20 @@ struct User {
 }
 ```
 
-Note that I use **Property Map** `profile_url: profileURL` to change the property name (Automatically generated will be `profileUrl`).
+You may need a `DateFormatter` extension:
+
+``` swift
+extension DateFormatter {
+
+    static let iso8601: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+        return formatter
+    }()
+}
+```
 
 Baby can also handle array root json, it will automatically merge properties for objects in array.
 
