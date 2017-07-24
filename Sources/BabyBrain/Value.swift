@@ -117,7 +117,7 @@ extension Value {
         case (let .string(value), .url):
             return .string(value: value)
         default:
-            fatalError("Unsupported merge! \(self), \(other)")
+            return .empty
         }
     }
 
