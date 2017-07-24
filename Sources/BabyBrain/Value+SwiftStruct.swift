@@ -49,7 +49,7 @@ extension Value {
             lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)]")
             lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).flatMap({ \(name.singularForm(meta: meta).type)(json: $0) }).flatMap({ $0 })")
         case .array:
-            fatalError("Unsupported array in array!")
+            lines.append("* Unsupported array in array!")
         case .url:
             let urlStrings = "\(name.propertyName(meta: meta))Strings"
             lines.append("\(indent)let \(urlStrings) = json[\"\(name)\"] as? [String]")
@@ -140,7 +140,7 @@ extension Value {
             lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)] else { return nil }")
             lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).map({ \(name.singularForm(meta: meta).type)(json: $0) }).flatMap({ $0 })")
         case .array:
-            fatalError("Unsupported array in array!")
+            lines.append("* Unsupported array in array!")
         case .url:
             let urlStrings = "\(name.propertyName(meta: meta))Strings"
             lines.append("\(indent)guard let \(urlStrings) = json[\"\(name)\"] as? [String] else { return nil }")
