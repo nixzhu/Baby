@@ -119,7 +119,9 @@ $ baby -i JSONFilePath
 $ baby --help
 ```
 
-Or, try Baby's web interface [SharedBaby](https://github.com/nixzhu/SharedBaby).
+Try Baby's web interface [SharedBaby](https://github.com/nixzhu/SharedBaby) if you like.
+
+Or, buy the [CuteBaby](https://itunes.apple.com/us/app/cutebaby/id1262352477?l=zh&ls=1&mt=12) on the Mac App Store.
 
 ## Contact
 
