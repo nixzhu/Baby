@@ -270,7 +270,7 @@ public func parse(_ input: String) -> (Value, String)? {
 // Map
 
 private let pair: Parser<(String, String)> = {
-    let letter = satisfy({ $0 != "," && $0 != ":" })
+    let letter = satisfy({ $0 != " " && $0 != "," && $0 != ":" })
     let colon = character(":")
     let string = map(many1(letter)) { String($0) }
     let word = eatRight(eatLeft(spaces, string), spaces)
