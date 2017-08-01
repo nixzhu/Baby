@@ -198,7 +198,7 @@ extension Value {
 }
 
 extension Value {
-    public var type: String {
+    var type: String {
         switch self {
         case .empty:
             return "Any"
@@ -247,10 +247,10 @@ extension Value {
 }
 
 extension String {
-    public func singularForm(meta: Meta) -> String {
+    func singularForm(meta: Meta) -> String {
         return singularForm(arrayObjectMap: meta.arrayObjectMap)
     }
-    public func singularForm(arrayObjectMap: [String: String]) -> String { // TODO: better singularForm
+    func singularForm(arrayObjectMap: [String: String]) -> String { // TODO: better singularForm
         if let name = arrayObjectMap[self] {
             return name
         } else {
@@ -264,11 +264,11 @@ extension String {
         }
     }
 
-    public var type: String { // TODO: better type
+    var type: String { // TODO: better type
         return self.components(separatedBy: "_").map({ $0.capitalizingFirstLetter() }).joined().capitalizingFirstLetter()
     }
 
-    public func propertyName(meta: Meta) -> String {
+    func propertyName(meta: Meta) -> String {
         if let propertyName = meta.propertyMap[self] {
             return propertyName
         } else if Meta.swiftKeywords.contains(self) {
