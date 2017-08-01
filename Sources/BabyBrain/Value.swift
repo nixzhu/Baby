@@ -28,6 +28,43 @@ public enum Value {
 }
 
 extension Value {
+    public func prettyPrinted(indentation: Indentation = .default) -> String {
+        switch self {
+        case .empty: return "null"
+        case .null(let optionalValue): return optionalValue?.prettyPrinted() ?? "null"
+        case .bool(let value): return "\(value)"
+        case .number(let value):
+            switch value {
+            case .int(let int): return "\(int)"
+            case .double(let double): return "\(double)"
+            }
+        case .string(let value): return "\"\(value)\""
+        case .object(_, let dictionary, let keys):
+            var lines: [String] = ["{"]
+            let properties = keys.map({ key in
+                let value = dictionary[key]!
+                return "\(indentation.deeper.value)\"\(key)\": \(value.prettyPrinted(indentation: indentation.deeper))"
+            }).joined(separator: ",\n")
+            lines.append(properties)
+            lines.append("\(indentation.value)}")
+            return lines.joined(separator: "\n")
+        case .array(_, let values):
+            var lines: [String] = ["["]
+            let valueLines = values.map({ value in
+                return indentation.deeper.value + value.prettyPrinted(indentation: indentation.deeper)
+            }).joined(separator: ",\n")
+            lines.append(valueLines)
+            lines.append("\(indentation.value)]")
+            return lines.joined(separator: "\n")
+        case .url:
+            return "@"
+        case .date:
+            return "$"
+        }
+    }
+}
+
+extension Value {
     private static func mergedValue(of values: [Value]) -> Value {
         if let first = values.first {
             return values.dropFirst().reduce(first, { $0.merge($1) })
@@ -234,9 +271,15 @@ extension String {
     public func propertyName(meta: Meta) -> String {
         if let propertyName = meta.propertyMap[self] {
             return propertyName
+        } else if Meta.swiftKeywords.contains(self) {
+            return "`\(self)`"
         } else {
             return type.lowercasingFirstLetter()
         }
+    }
+
+    func removedQuotationMark() -> String {
+        return self.trimmingCharacters(in: CharacterSet(charactersIn: "`"))
     }
 
     func capitalizingFirstLetter() -> String {
