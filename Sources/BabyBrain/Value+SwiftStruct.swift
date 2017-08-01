@@ -14,7 +14,7 @@ extension Value {
             lines.append("\(indent)\(meta.publicCode)init(\(arguments)) {")
             for key in keys {
                 let propertyName = key.propertyName(meta: meta)
-                lines.append("\(indent1)self.\(propertyName) = \(propertyName)")
+                lines.append("\(indent1)self.\(propertyName.removedQuotationMark()) = \(propertyName)")
             }
         default:
             break
@@ -222,7 +222,7 @@ extension Value {
                 let value = dictionary[key]!
                 lines.append(value.initialCode(indentation: indentation.deeper, meta: meta, key: key))
             }
-            let arguments = keys.map({ "\($0.propertyName(meta: meta)): \($0.propertyName(meta: meta))" }).joined(separator: ", ")
+            let arguments = keys.map({ "\($0.propertyName(meta: meta).removedQuotationMark()): \($0.propertyName(meta: meta))" }).joined(separator: ", ")
             lines.append("\(indent1)self.init(\(arguments))")
         default:
             break
@@ -253,7 +253,7 @@ extension Value {
             if meta.codable {
                 func needCodingKeys(with dictionary: [String: Any]) -> Bool {
                     for key in keys {
-                        let propertyName = key.propertyName(meta: meta)
+                        let propertyName = key.propertyName(meta: meta).removedQuotationMark()
                         if propertyName != key {
                             return true
                         }
