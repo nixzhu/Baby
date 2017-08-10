@@ -113,8 +113,7 @@ extension Value {
             }
             return .number(value: newValue)
         case (let .string(valueA), let .string(valueB)):
-            let value = valueA.isEmpty ? valueB : valueA
-            return .string(value: value)
+            return .string(value: valueA + Meta.enumRawValueSeparator + valueB)
         case (let .object(nameA, dictionaryA, keysA), let .object(nameB, dictionaryB, keysB)):
             guard nameA == nameB else { fatalError("Unsupported object merge!") }
             var dictionary = dictionaryA
@@ -129,7 +128,7 @@ extension Value {
             for key in keysB {
                 let valueB = dictionaryB[key]!
                 if let valueA = dictionaryA[key] {
-                    dictionary[key] = valueB.merge(valueA)
+                    dictionary[key] = valueA.merge(valueB)
                 } else {
                     dictionary[key] = valueB.isNull ? valueB : .null(optionalValue: valueB)
                 }
@@ -233,12 +232,120 @@ extension Value {
             return "Date"
         }
     }
+
+    enum PropertyType {
+        case normal(name: String)
+        // Gender, Gender|Gender?|[Gender], String
+        enum RawType: String {
+            case string = "String"
+            case int = "Int"
+            case double = "Double"
+
+            var string: String {
+                return rawValue
+            }
+        }
+        case `enum`(name: String, propertyType: String, rawType: RawType, rawValues: String)
+
+        var name: String {
+            switch self {
+            case .normal(let name): return name
+            case .enum(let name, _, _, _): return name
+            }
+        }
+        var propertyType: String {
+            switch self {
+            case .normal(let name): return name
+            case .enum(_, let propertyType, _, _): return propertyType
+            }
+        }
+        var enumRawType: String {
+            switch self {
+            case .normal: fatalError()
+            case .enum(_, _, let rawType, _): return rawType.string
+            }
+        }
+    }
+
+    func propertyType(key: String, meta: Meta, inArray: Bool = false) -> PropertyType {
+        if meta.contains(enumPropertyKey: key) {
+            var rawValues: String = ""
+            if case .string(let _rawValues) = self {
+                rawValues = _rawValues
+            }
+            if case .array(_, let values) = self {
+                var _rawValues: [String] = []
+                for value in values {
+                    if case .string(let rawValue) = value {
+                        _rawValues.append(rawValue)
+                    }
+                }
+                rawValues = _rawValues.joined(separator: Meta.enumRawValueSeparator)
+            }
+            var name: String
+            let propertyType: String
+            let ckey = key.type
+            var baseValue: Value?
+            switch self {
+            case .null(let optionalValue):
+                name = ckey
+                propertyType = "\(ckey)?"
+                baseValue = optionalValue
+            case .array(_, let values):
+                name = ckey.singularForm(meta: meta)
+                propertyType = "[\(ckey.singularForm(meta: meta))]"
+                baseValue = values.first
+            default:
+                if inArray {
+                    name = ckey.singularForm(meta: meta)
+                    propertyType = ckey.singularForm(meta: meta)
+                } else {
+                    name = ckey
+                    propertyType = ckey
+                }
+                baseValue = self
+            }
+            if Meta.swiftKeywords.contains(name) {
+                name = "`\(name)`"
+            }
+            let rawType: PropertyType.RawType
+            if let baseValue = baseValue {
+                switch baseValue {
+                case .string:
+                    rawType = .string
+                case .number(let value):
+                    switch value {
+                    case .int:
+                        rawType = .int
+                    case .double:
+                        rawType = .double
+                    }
+                default:
+                    rawType = .string
+                }
+            } else {
+                rawType = .string
+            }
+            return .enum(name: name, propertyType: propertyType, rawType: rawType, rawValues: rawValues)
+        } else {
+            return .normal(name: type)
+        }
+    }
 }
 
 extension Value {
     var isNull: Bool {
         switch self {
         case .null:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var isArray: Bool {
+        switch self {
+        case .array:
             return true
         default:
             return false
@@ -265,7 +372,11 @@ extension String {
     }
 
     var type: String { // TODO: better type
-        return self.components(separatedBy: "_").map({ $0.capitalizingFirstLetter() }).joined().capitalizingFirstLetter()
+        return self.replacingOccurrences(of: "-", with: "_")
+            .components(separatedBy: "_")
+            .map({ $0.capitalizingFirstLetter() })
+            .joined()
+            .capitalizingFirstLetter()
     }
 
     func propertyName(meta: Meta) -> String {

@@ -83,6 +83,9 @@ func main(_ arguments: [String]) {
         let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
         let propertyMapString = arguments.valueOfOption(propertyMapOption) ?? ""
         let propertyMap = map(of: propertyMapString)
+        let enumPropertiesOption = Arguments.Option.Long(key: "enum-properties")
+        let enumPropertiesString = arguments.valueOfOption(enumPropertiesOption) ?? ""
+        let enumProperties: [Meta.EnumProperty] = list(of: enumPropertiesString).map({ .init(name: $0, cases: $1) })
         let meta = Meta(
             isPublic: isPublic,
             modelType: modelType,
@@ -90,7 +93,8 @@ func main(_ arguments: [String]) {
             declareVariableProperties: declareVariableProperties,
             jsonDictionaryName: jsonDictionaryName,
             propertyMap: propertyMap,
-            arrayObjectMap: arrayObjectMap
+            arrayObjectMap: arrayObjectMap,
+            enumProperties: enumProperties
         )
         print(upgradedValue.swiftCode(meta: meta))
     } else {

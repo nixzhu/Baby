@@ -289,3 +289,29 @@ public func map(of input: String) -> [String: String] {
     }
     return map
 }
+
+// List
+
+// type, gender[male, female, other: unknown], loves
+public func list(of input: String) -> [(String, [(String, String?)]?)] {
+    func _satisfy(_ c: Character) -> Bool {
+        return c != " " && c != "," && c != ":" && c != "[" && c != "]"
+    }
+    let letter = satisfy(_satisfy)
+    let comma = character(",")
+    let string = map(many1(letter)) { String($0) }
+    let word = eatRight(eatLeft(spaces, string), spaces)
+    let cases = between(
+        character("["),
+        list(
+            and(
+                word,
+                optional(eatLeft(character(":"), word))),
+            comma
+        ),
+        character("]")
+    )
+    let _list = list(and(word, optional(cases)), comma)
+    guard let (result, _) = _list(input.characters) else { return [] }
+    return result
+}
