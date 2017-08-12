@@ -1,0 +1,184 @@
+
+/*
+ * @nixzhu (zhuhongxu@gmail.com)
+ */
+
+import Foundation
+
+enum Primitive {
+    case bool
+    case int
+    case double
+    case string
+    case url
+    case date
+    case any
+    indirect case null(PlainType)
+}
+
+enum PlainType {
+    case primitive(Primitive)
+    case `struct`(Struct)
+    case `enum`(Enum)
+}
+
+struct Type {
+    let plainType: PlainType
+    enum Status {
+        case normal
+        case isOptional
+        case inArray
+    }
+    let status: Status
+}
+
+struct Property {
+    let name: String
+    let type: Type
+}
+
+struct Struct {
+    let name: String
+    let properties: [Property]
+}
+
+struct Enum {
+    let name: String
+    let primitive: Primitive
+    struct Case {
+        let name: String
+        enum RawValue {
+            case string(String)
+            case int(Int)
+            case double(Double)
+        }
+        let rawValue: RawValue?
+    }
+    let cases: [Case]
+}
+
+enum Code {
+    case type(Type)
+    case property(Property)
+    case `struct`(Struct)
+
+    var plainType: PlainType {
+        switch self {
+        case let .type(type):
+            return type.plainType
+        case let .property(property):
+            return property.type.plainType
+        case let .struct(`struct`):
+            return .struct(`struct`)
+        }
+    }
+}
+
+extension Value {
+
+    var status: Type.Status {
+        switch self {
+        case .null:
+            return .isOptional
+        case .array:
+            return .inArray
+        default:
+            return .normal
+        }
+    }
+}
+
+extension Code {
+    static func create(name: String, value: Value) -> Code {
+        switch value {
+        case .empty:
+            let property = Property(
+                name: name,
+                type: Type(plainType: .primitive(.any), status: .normal)
+            )
+            return .property(property)
+        case let .null(optionalValue):
+            if let value = optionalValue {
+                let code = create(name: name, value: value)
+                let type = Type(plainType: .primitive(.null(code.plainType)), status: .isOptional)
+                let property = Property(
+                    name: name,
+                    type: type
+                )
+                return .property(property)
+            } else {
+                let property = Property(
+                    name: name,
+                    type: Type(plainType: .primitive(.any), status: .isOptional)
+                )
+                return .property(property)
+            }
+        case .bool:
+            let property = Property(
+                name: name,
+                type: Type(plainType: .primitive(.bool), status: .normal)
+            )
+            return .property(property)
+        case let .number(number):
+            let property: Property
+            switch number {
+            case .int:
+                property = Property(
+                    name: name,
+                    type: Type(plainType: .primitive(.int), status: .normal)
+                )
+            case .double:
+                property = Property(
+                    name: name,
+                    type: Type(plainType: .primitive(.double), status: .normal)
+                )
+            }
+            return .property(property)
+        case .string:
+            let property = Property(
+                name: name,
+                type: Type(plainType: .primitive(.string), status: .normal)
+            )
+            return .property(property)
+        case let .object(name, dictionary, keys):
+            let properties: [Property] = keys.map {
+                let value = dictionary[$0]!
+                let code = create(name: $0, value: value)
+                let property = Property(
+                    name: $0,
+                    type: Type(plainType: code.plainType, status: value.status)
+                )
+                return property
+            }
+            let `struct` = Struct(name: name, properties: properties)
+            return .struct(`struct`)
+        case let .array(name, values):
+            if let value = values.first {
+                let code = create(name: name, value: value)
+                let type = Type(plainType: code.plainType, status: .inArray)
+                return .type(type)
+            } else {
+                let type = Type(plainType: .primitive(.any), status: .inArray)
+                return .type(type)
+            }
+        case .url:
+            let property = Property(
+                name: name,
+                type: Type(plainType: .primitive(.url), status: .normal)
+            )
+            return .property(property)
+        case .date:
+            let property = Property(
+                name: name,
+                type: Type(plainType: .primitive(.date), status: .normal)
+            )
+            return .property(property)
+        }
+    }
+}
+
+public func code(name: String, value: Value) {
+    let code = Code.create(name: name, value: value)
+    print("-----------code-----------")
+    print(code)
+}
