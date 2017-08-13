@@ -279,7 +279,7 @@ extension Type {
 
 extension Property {
 
-    func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
+    func definition(indentation: Indentation, meta: Meta) -> String {
         let indent = indentation.value
         var lines: [String] = []
         lines.append("\(indent)\(meta.declareKeyword) \(name.propertyName(meta: meta)): \(type.name)")
@@ -310,7 +310,56 @@ extension Struct {
         return name.type
     }
 
-    func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
+    func codingKeysEnum(indentation: Indentation, meta: Meta) -> String? {
+        let keys = properties.map({ $0.name })
+        func needCodingKeys() -> Bool {
+            for key in keys {
+                let propertyName = key.propertyName(meta: meta).removedQuotationMark()
+                if propertyName != key {
+                    return true
+                }
+            }
+            return false
+        }
+        if needCodingKeys() {
+            let indent1 = indentation.deeper.value
+            let indent2 = indentation.deeper.deeper.value
+            var lines: [String] = []
+            lines.append("\(indent1)private enum CodingKeys: String, CodingKey {")
+            for key in keys {
+                let propertyName = key.propertyName(meta: meta)
+                if propertyName == key {
+                    lines.append("\(indent2)case \(propertyName)")
+                } else {
+                    lines.append("\(indent2)case \(propertyName) = \"\(key)\"")
+                }
+            }
+            lines.append("\(indent1)}")
+            return lines.joined(separator: "\n")
+        } else {
+            return nil
+        }
+    }
+
+    func designatedInitializer(indentation: Indentation, meta: Meta) -> String {
+        let indent1 = indentation.deeper.value
+        let indent2 = indentation.deeper.deeper.value
+        var lines: [String] = []
+        let arguments = properties.map({
+            ($0.name.propertyName(meta: meta), $0.type.name)
+        }).map({
+            "\($0.0): \($0.1)"
+        }).joined(separator: ", ")
+        lines.append("\(indent1)\(meta.publicCode)init(\(arguments)) {")
+        properties.forEach {
+            let propertyName = $0.name.propertyName(meta: meta)
+            lines.append("\(indent2)self.\(propertyName) = \(propertyName)")
+        }
+        lines.append("\(indent1)}")
+        return lines.joined(separator: "\n")
+    }
+
+    func definition(indentation: Indentation, meta: Meta) -> String {
         let indent = indentation.value
         var lines: [String] = []
         if meta.codable {
@@ -325,44 +374,11 @@ extension Struct {
             lines.append($0.definition(indentation: indentation.deeper, meta: meta))
         }
         if meta.codable {
-            let indent1 = indentation.deeper.value
-            let indent2 = indentation.deeper.deeper.value
-            let keys = properties.map({ $0.name })
-            func needCodingKeys() -> Bool {
-                for key in keys {
-                    let propertyName = key.propertyName(meta: meta).removedQuotationMark()
-                    if propertyName != key {
-                        return true
-                    }
-                }
-                return false
-            }
-            if needCodingKeys() {
-                lines.append("\(indent1)private enum CodingKeys: String, CodingKey {")
-                for key in keys {
-                    let propertyName = key.propertyName(meta: meta)
-                    if propertyName == key {
-                        lines.append("\(indent2)case \(propertyName)")
-                    } else {
-                        lines.append("\(indent2)case \(propertyName) = \"\(key)\"")
-                    }
-                }
-                lines.append("\(indent1)}")
+            codingKeysEnum(indentation: indentation, meta: meta).flatMap {
+                lines.append($0)
             }
         } else {
-            let indent1 = indentation.deeper.value
-            let indent2 = indentation.deeper.deeper.value
-            let arguments = properties.map({
-                ($0.name.propertyName(meta: meta), $0.type.name)
-            }).map({
-                "\($0.0): \($0.1)"
-            }).joined(separator: ", ")
-            lines.append("\(indent1)\(meta.publicCode)init(\(arguments)) {")
-            properties.forEach {
-                let propertyName = $0.name.propertyName(meta: meta)
-                lines.append("\(indent2)self.\(propertyName) = \(propertyName)")
-            }
-            lines.append("\(indent1)}")
+            lines.append(designatedInitializer(indentation: indentation, meta: meta))
         }
         lines.append("\(indent)}")
         return lines.joined(separator: "\n")
@@ -371,7 +387,7 @@ extension Struct {
 
 extension Enum.Case {
 
-    func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
+    func definition(indentation: Indentation, meta: Meta) -> String {
         let indent = indentation.value
         if let rawValue = rawValue {
             switch rawValue {
@@ -406,7 +422,7 @@ extension Enum {
         return name.type
     }
 
-    func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
+    func definition(indentation: Indentation, meta: Meta) -> String {
         let indent = indentation.value
         var lines: [String] = []
         if meta.codable {
@@ -428,6 +444,6 @@ public func code(name: String, value: Value, meta: Meta) {
         print("-----------struct-----------")
         print(`struct`)
         print("-----------definition-----------")
-        print(`struct`.definition(meta: meta))
+        print(`struct`.definition(indentation: .default, meta: meta))
     }
 }
