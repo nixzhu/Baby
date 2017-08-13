@@ -98,7 +98,7 @@ func main(_ arguments: [String]) {
             enumProperties: enumProperties
         )
         print(upgradedValue.swiftCode(meta: meta))
-        code(name: "Code", value: upgradedValue)
+        code(name: "Code", value: upgradedValue, meta: meta)
     } else {
         print("Invalid JSON!")
     }

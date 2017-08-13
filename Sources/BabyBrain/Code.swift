@@ -234,7 +234,7 @@ extension Property {
     func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
         let indent = indentation.value
         var lines: [String] = []
-        lines.append("\(indent)let \(name): \(type.name)")
+        lines.append("\(indent)let \(name.propertyName(meta: meta)): \(type.name)")
         return lines.joined(separator: "\n")
     }
 
@@ -292,12 +292,12 @@ extension Enum {
     }
 }
 
-public func code(name: String, value: Value) {
+public func code(name: String, value: Value, meta: Meta) {
     let code = Code.create(name: name, value: value)
     if case let .struct(`struct`) = code {
         print("-----------struct-----------")
         print(`struct`)
         print("-----------definition-----------")
-        print(`struct`.definition())
+        print(`struct`.definition(meta: meta))
     }
 }
