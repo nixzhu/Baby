@@ -218,7 +218,7 @@ extension Type {
         }
         switch status {
         case .normal: return _name
-        case .isOptional: return _name + "?"
+        case .isOptional: return _name //+ "?"
         case .inArray: return "[" + _name + "]"
         }
     }
@@ -232,17 +232,48 @@ extension Property {
         lines.append("\(indent)let \(name): \(type.name)")
         return lines.joined(separator: "\n")
     }
+
+    func nestedDefinition(indentation: Indentation = .default, meta: Meta = .default) -> String? {
+        var lines: [String] = []
+        switch type.plainType {
+        case .primitive:
+            break
+        case let .struct(s):
+            lines.append(s.definition(indentation: indentation.deeper, meta: meta))
+        case let .enum(e):
+            lines.append(e.definition(indentation: indentation.deeper, meta: meta))
+        }
+        if lines.isEmpty {
+            return nil
+        } else {
+            return lines.joined(separator: "\n")
+        }
+    }
 }
 
 extension Struct {
 
-    func string(indentation: Indentation = .default, meta: Meta = .default) -> String {
+    func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
         let indent = indentation.value
         var lines: [String] = []
         lines.append("\(indent)struct \(name) {")
         properties.forEach {
+            $0.nestedDefinition(indentation: indentation, meta: meta).flatMap {
+                lines.append($0)
+            }
             lines.append($0.definition(indentation: indentation.deeper, meta: meta))
         }
+        lines.append("\(indent)}")
+        return lines.joined(separator: "\n")
+    }
+}
+
+extension Enum {
+
+    func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
+        let indent = indentation.value
+        var lines: [String] = []
+        lines.append("\(indent)enum \(name) {")
         lines.append("\(indent)}")
         return lines.joined(separator: "\n")
     }
@@ -253,7 +284,7 @@ public func code(name: String, value: Value) {
     if case let .struct(`struct`) = code {
         print("-----------struct-----------")
         print(`struct`)
-        print("-----------string-----------")
-        print(`struct`.string())
+        print("-----------definition-----------")
+        print(`struct`.definition())
     }
 }
