@@ -234,7 +234,7 @@ extension Property {
     func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
         let indent = indentation.value
         var lines: [String] = []
-        lines.append("\(indent)let \(name.propertyName(meta: meta)): \(type.name)")
+        lines.append("\(indent)\(meta.declareKeyword) \(name.propertyName(meta: meta)): \(type.name)")
         return lines.joined(separator: "\n")
     }
 
@@ -265,7 +265,11 @@ extension Struct {
     func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
         let indent = indentation.value
         var lines: [String] = []
-        lines.append("\(indent)struct \(typeName) {")
+        if meta.codable {
+            lines.append("\(indent)\(meta.publicCode)struct \(typeName): Codable {")
+        } else {
+            lines.append("\(indent)\(meta.publicCode)struct \(typeName) {")
+        }
         properties.forEach {
             $0.nestedDefinition(indentation: indentation, meta: meta).flatMap {
                 lines.append($0)
@@ -286,7 +290,11 @@ extension Enum {
     func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
         let indent = indentation.value
         var lines: [String] = []
-        lines.append("\(indent)enum \(typeName) {")
+        if meta.codable {
+            lines.append("\(indent)\(meta.publicCode)enum \(typeName): \(primitive.name), Codable {")
+        } else {
+            lines.append("\(indent)\(meta.publicCode)enum \(typeName): \(primitive.name) {")
+        }
         lines.append("\(indent)}")
         return lines.joined(separator: "\n")
     }
