@@ -212,13 +212,18 @@ extension Type {
         case let .primitive(p):
             _name = p.name
         case let .struct(s):
-            _name = s.name
+            _name = s.typeName
         case let .enum(e):
-            _name = e.name
+            _name = e.typeName
         }
         switch status {
         case .normal: return _name
-        case .isOptional: return _name //+ "?"
+        case .isOptional:
+            if _name.hasSuffix("?") {
+                return _name
+            } else {
+                return _name + "?"
+            }
         case .inArray: return "[" + _name + "]"
         }
     }
@@ -253,10 +258,14 @@ extension Property {
 
 extension Struct {
 
+    var typeName: String {
+        return name.type
+    }
+
     func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
         let indent = indentation.value
         var lines: [String] = []
-        lines.append("\(indent)struct \(name) {")
+        lines.append("\(indent)struct \(typeName) {")
         properties.forEach {
             $0.nestedDefinition(indentation: indentation, meta: meta).flatMap {
                 lines.append($0)
@@ -270,10 +279,14 @@ extension Struct {
 
 extension Enum {
 
+    var typeName: String {
+        return name.type
+    }
+
     func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
         let indent = indentation.value
         var lines: [String] = []
-        lines.append("\(indent)enum \(name) {")
+        lines.append("\(indent)enum \(typeName) {")
         lines.append("\(indent)}")
         return lines.joined(separator: "\n")
     }
