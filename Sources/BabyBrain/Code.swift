@@ -276,6 +276,32 @@ extension Struct {
             }
             lines.append($0.definition(indentation: indentation.deeper, meta: meta))
         }
+        if meta.codable {
+            let indent1 = indentation.deeper.value
+            let indent2 = indentation.deeper.deeper.value
+            let keys = properties.map({ $0.name })
+            func needCodingKeys() -> Bool {
+                for key in keys {
+                    let propertyName = key.propertyName(meta: meta).removedQuotationMark()
+                    if propertyName != key {
+                        return true
+                    }
+                }
+                return false
+            }
+            if needCodingKeys() {
+                lines.append("\(indent1)private enum CodingKeys: String, CodingKey {")
+                for key in keys {
+                    let propertyName = key.propertyName(meta: meta)
+                    if propertyName == key {
+                        lines.append("\(indent2)case \(propertyName)")
+                    } else {
+                        lines.append("\(indent2)case \(propertyName) = \"\(key)\"")
+                    }
+                }
+                lines.append("\(indent1)}")
+            }
+        }
         lines.append("\(indent)}")
         return lines.joined(separator: "\n")
     }
