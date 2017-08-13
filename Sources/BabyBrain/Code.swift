@@ -61,6 +61,7 @@ enum Code {
     case type(Type)
     case property(Property)
     case `struct`(Struct)
+    case `enum`(Enum)
 
     var plainType: PlainType {
         switch self {
@@ -68,8 +69,10 @@ enum Code {
             return type.plainType
         case let .property(property):
             return property.type.plainType
-        case let .struct(`struct`):
-            return .struct(`struct`)
+        case let .struct(s):
+            return .struct(s)
+        case let .enum(e):
+            return .enum(e)
         }
     }
 }
@@ -89,7 +92,7 @@ extension Value {
 }
 
 extension Code {
-    static func create(name: String, value: Value) -> Code {
+    static func create(name: String, value: Value, meta: Meta) -> Code {
         switch value {
         case .empty:
             let property = Property(
@@ -99,7 +102,7 @@ extension Code {
             return .property(property)
         case let .null(optionalValue):
             if let value = optionalValue {
-                let code = create(name: name, value: value)
+                let code = create(name: name, value: value, meta: meta)
                 let type = Type(plainType: .primitive(.null(code.plainType)), status: .isOptional)
                 let property = Property(
                     name: name,
@@ -120,30 +123,75 @@ extension Code {
             )
             return .property(property)
         case let .number(number):
-            let property: Property
-            switch number {
-            case .int:
-                property = Property(
+            if meta.contains(enumPropertyKey: name) {
+                let cases: [Enum.Case] = (meta.enumCases(key: name) ?? []).map {
+                    let rawValue = $0.rawValue.flatMap {
+                        Enum.Case.RawValue.string($0)
+                    }
+                    return Enum.Case(name: $0.name, rawValue: rawValue)
+                }
+                let e: Enum
+                switch number {
+                case .int:
+                    e = Enum(name: name, primitive: .int, cases: cases)
+                case .double:
+                    e = Enum(name: name, primitive: .double, cases: cases)
+                }
+                let property = Property(
                     name: name,
-                    type: Type(plainType: .primitive(.int), status: .normal)
+                    type: Type(plainType: .enum(e), status: .normal)
                 )
-            case .double:
-                property = Property(
-                    name: name,
-                    type: Type(plainType: .primitive(.double), status: .normal)
-                )
+                return .property(property)
+            } else {
+                let property: Property
+                switch number {
+                case .int:
+                    property = Property(
+                        name: name,
+                        type: Type(plainType: .primitive(.int), status: .normal)
+                    )
+                case .double:
+                    property = Property(
+                        name: name,
+                        type: Type(plainType: .primitive(.double), status: .normal)
+                    )
+                }
+                return .property(property)
             }
-            return .property(property)
-        case .string:
-            let property = Property(
-                name: name,
-                type: Type(plainType: .primitive(.string), status: .normal)
-            )
-            return .property(property)
+        case .string(let rawValuesString):
+            if meta.contains(enumPropertyKey: name) {
+                let cases: [Enum.Case]
+                if let _cases = meta.enumCases(key: name) {
+                    cases = _cases.map {
+                        let rawValue = $0.rawValue.flatMap {
+                            Enum.Case.RawValue.string($0)
+                        }
+                        return Enum.Case(name: $0.name, rawValue: rawValue)
+                    }
+                } else {
+                    let rawValues = rawValuesString.components(separatedBy: Meta.enumRawValueSeparator)
+                    cases = rawValues.map {
+                        let rawValue = Enum.Case.RawValue.string($0)
+                        return Enum.Case(name: $0.propertyName(meta: meta), rawValue: rawValue)
+                    }
+                }
+                let e = Enum(name: name, primitive: .string, cases: cases)
+                let property = Property(
+                    name: name,
+                    type: Type(plainType: .enum(e), status: .normal)
+                )
+                return .property(property)
+            } else {
+                let property = Property(
+                    name: name,
+                    type: Type(plainType: .primitive(.string), status: .normal)
+                )
+                return .property(property)
+            }
         case let .object(name, dictionary, keys):
             let properties: [Property] = keys.map {
                 let value = dictionary[$0]!
-                let code = create(name: $0, value: value)
+                let code = create(name: $0, value: value, meta: meta)
                 let property = Property(
                     name: $0,
                     type: Type(plainType: code.plainType, status: value.status)
@@ -154,7 +202,7 @@ extension Code {
             return .struct(`struct`)
         case let .array(name, values):
             if let value = values.first {
-                let code = create(name: name, value: value)
+                let code = create(name: name, value: value, meta: meta)
                 let type = Type(plainType: code.plainType, status: .inArray)
                 return .type(type)
             } else {
@@ -307,6 +355,37 @@ extension Struct {
     }
 }
 
+extension Enum.Case {
+
+    func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
+        let indent = indentation.value
+        if let rawValue = rawValue {
+            switch rawValue {
+            case .string(let rawValue):
+                if name.removedQuotationMark() == rawValue {
+                    return "\(indent)case \(name)"
+                } else {
+                    return "\(indent)case \(name) = \"\(rawValue)\""
+                }
+            case .int(let rawValue):
+                if name.removedQuotationMark() == "\(rawValue)" {
+                    return "\(indent)case \(name)"
+                } else {
+                    return "\(indent)case \(name) = \(rawValue)"
+                }
+            case .double(let rawValue):
+                if name.removedQuotationMark() == "\(rawValue)" {
+                    return "\(indent)case \(name)"
+                } else {
+                    return "\(indent)case \(name) = \(rawValue)"
+                }
+            }
+        } else {
+            return "\(indent)case \(name)"
+        }
+    }
+}
+
 extension Enum {
 
     var typeName: String {
@@ -321,13 +400,16 @@ extension Enum {
         } else {
             lines.append("\(indent)\(meta.publicCode)enum \(typeName): \(primitive.name) {")
         }
+        cases.forEach {
+            lines.append($0.definition(indentation: indentation.deeper, meta: meta))
+        }
         lines.append("\(indent)}")
         return lines.joined(separator: "\n")
     }
 }
 
 public func code(name: String, value: Value, meta: Meta) {
-    let code = Code.create(name: name, value: value)
+    let code = Code.create(name: name, value: value, meta: meta)
     if case let .struct(`struct`) = code {
         print("-----------struct-----------")
         print(`struct`)
