@@ -177,8 +177,83 @@ extension Code {
     }
 }
 
+extension Primitive {
+
+    var name: String {
+        switch self {
+        case .bool: return "Bool"
+        case .int: return "Int"
+        case .double: return "Double"
+        case .string: return "String"
+        case .url: return "URL"
+        case .date: return "Date"
+        case .any: return "Any"
+        case let .null(plainType): return plainType.name + "?"
+        }
+    }
+}
+
+extension PlainType {
+
+    var name: String {
+        switch self {
+        case let .primitive(p): return p.name
+        case let .struct(s): return s.name
+        case let .enum(e): return e.name
+        }
+    }
+}
+
+extension Type {
+
+    var name: String {
+        let _name: String
+        switch plainType {
+        case let .primitive(p):
+            _name = p.name
+        case let .struct(s):
+            _name = s.name
+        case let .enum(e):
+            _name = e.name
+        }
+        switch status {
+        case .normal: return _name
+        case .isOptional: return _name + "?"
+        case .inArray: return "[" + _name + "]"
+        }
+    }
+}
+
+extension Property {
+
+    func definition(indentation: Indentation = .default, meta: Meta = .default) -> String {
+        let indent = indentation.value
+        var lines: [String] = []
+        lines.append("\(indent)let \(name): \(type.name)")
+        return lines.joined(separator: "\n")
+    }
+}
+
+extension Struct {
+
+    func string(indentation: Indentation = .default, meta: Meta = .default) -> String {
+        let indent = indentation.value
+        var lines: [String] = []
+        lines.append("\(indent)struct \(name) {")
+        properties.forEach {
+            lines.append($0.definition(indentation: indentation.deeper, meta: meta))
+        }
+        lines.append("\(indent)}")
+        return lines.joined(separator: "\n")
+    }
+}
+
 public func code(name: String, value: Value) {
     let code = Code.create(name: name, value: value)
-    print("-----------code-----------")
-    print(code)
+    if case let .struct(`struct`) = code {
+        print("-----------struct-----------")
+        print(`struct`)
+        print("-----------string-----------")
+        print(`struct`.string())
+    }
 }
