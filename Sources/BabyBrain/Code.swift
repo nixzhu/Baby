@@ -349,6 +349,20 @@ extension Struct {
                 }
                 lines.append("\(indent1)}")
             }
+        } else {
+            let indent1 = indentation.deeper.value
+            let indent2 = indentation.deeper.deeper.value
+            let arguments = properties.map({
+                ($0.name.propertyName(meta: meta), $0.type.name)
+            }).map({
+                "\($0.0): \($0.1)"
+            }).joined(separator: ", ")
+            lines.append("\(indent1)\(meta.publicCode)init(\(arguments)) {")
+            properties.forEach {
+                let propertyName = $0.name.propertyName(meta: meta)
+                lines.append("\(indent2)self.\(propertyName) = \(propertyName)")
+            }
+            lines.append("\(indent1)}")
         }
         lines.append("\(indent)}")
         return lines.joined(separator: "\n")
