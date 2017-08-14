@@ -11,7 +11,7 @@ enum Primitive {
     case double
     case string
     case url
-    case date
+    case date(type: Value.DateType)
     case any
     indirect case null(PlainType)
 }
@@ -215,10 +215,10 @@ extension Code {
                 type: Type(plainType: .primitive(.url), status: .normal)
             )
             return .property(property)
-        case .date:
+        case let .date(type):
             let property = Property(
                 name: name,
-                type: Type(plainType: .primitive(.date), status: .normal)
+                type: Type(plainType: .primitive(.date(type: type)), status: .normal)
             )
             return .property(property)
         }
@@ -376,8 +376,21 @@ extension Struct {
                     case .url:
                         lines.append("\(indent2)guard let \(propertyName)String = json[\"\($0.name)\"] as? String else { return nil }")
                         lines.append("\(indent2)guard let \(propertyName) = URL(string: \(propertyName)String) else { return nil }")
-                    case .date:
-                        break
+                    case let .date(type):
+                        switch type {
+                        case .iso8601:
+                            let dateString = "\(propertyName)String"
+                            lines.append("\(indent2)guard let \(dateString) = json[\"\($0.name)\"] as? String else { return nil }")
+                            lines.append("\(indent2)guard let \(propertyName) = DateFormatter.iso8601.date(from: \(dateString)) else { return nil }")
+                        case .dateOnly:
+                            let dateString = "\(propertyName)String"
+                            lines.append("\(indent2)guard let \(dateString) = json[\"\($0.name)\"] as? String else { return nil }")
+                            lines.append("\(indent2)guard let \(propertyName) = DateFormatter.dateOnly.date(from: \(dateString)) else { return nil }")
+                        case .secondsSince1970:
+                            let dateTimeInterval = "\(propertyName)TimeInterval"
+                            lines.append("\(indent2)guard let \(dateTimeInterval) = json[\"\($0.name)\"] as? TimeInterval else { return nil }")
+                            lines.append("\(indent2)let \(propertyName) = Date(timeIntervalSince1970: \(dateTimeInterval))")
+                        }
                     case .any:
                         break
                     case .null:
