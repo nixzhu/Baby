@@ -393,8 +393,9 @@ extension Struct {
                         }
                     case .any:
                         lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"]")
-                    case let .null(plainType): // TODO: null
-                        lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"] as? \(plainType.name)")
+                    case .null:
+                        assertionFailure("No null for normal")
+                        break
                     }
                 case let .struct(s):
                     lines.append("\(indent2)guard let \(propertyName)JSONDictionary = json[\"\($0.name)\"] as? \(meta.jsonDictionaryName) else { return nil }")
