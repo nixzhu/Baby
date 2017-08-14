@@ -359,6 +359,60 @@ extension Struct {
         return lines.joined(separator: "\n")
     }
 
+    func failableInitializer(indentation: Indentation, meta: Meta) -> String {
+        let indent1 = indentation.deeper.value
+        let indent2 = indentation.deeper.deeper.value
+        var lines: [String] = []
+        lines.append("\(indent1)\(meta.publicCode)init?(json: \(meta.jsonDictionaryName)) {")
+        properties.forEach {
+            let propertyName = $0.name.propertyName(meta: meta)
+            switch $0.type.status {
+            case .normal:
+                switch $0.type.plainType {
+                case let .primitive(p):
+                    lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] as? \(p.name) else { return nil }")
+                case let .struct(s):
+                    lines.append("\(indent2)guard let \(propertyName)JSONDictionary = json[\"\($0.name)\"] as? \(meta.jsonDictionaryName) else { return nil }")
+                    lines.append("\(indent2)guard let \(propertyName) = \(s.typeName)(json: \(propertyName)JSONDictionary) else { return nil }")
+                case let .enum(e):
+                    lines.append("\(indent2)guard let \(propertyName)RawValue = json[\"\($0.name)\"] as? \(e.primitive.name) else { return nil }")
+                    lines.append("\(indent2)guard let \(propertyName) = \(e.typeName)(rawValue: \(propertyName)RawValue) else { return nil }")
+                }
+            case .isOptional:
+                switch $0.type.plainType {
+                case let .primitive(p):
+                    lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"] as? \(p.name)")
+                case let .struct(s):
+                    lines.append("\(indent2)let \(propertyName)JSONDictionary = json[\"\($0.name)\"] as? \(meta.jsonDictionaryName)")
+                    lines.append("\(indent2)let \(propertyName) = \(propertyName)JSONDictionary.flatMap({ \(s.typeName)(json: $0) })")
+                case let .enum(e):
+                    lines.append("\(indent2)let \(propertyName)RawValue = json[\"\($0.name)\"] as? \(e.primitive.name)")
+                    lines.append("\(indent2)let \(propertyName) = \(propertyName)RawValue.flatMap({ \(e.typeName)(rawValue: $0) })")
+                }
+            case .inArray:
+                switch $0.type.plainType {
+                case let .primitive(p):
+                    lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] as? [\(p.name)] else { return nil }")
+                    break
+                case let .struct(s):
+                    lines.append("\(indent2)guard let \(propertyName)JSONArray = json[\"\($0.name)\"] as? [\(meta.jsonDictionaryName)] else { return nil }")
+                    lines.append("\(indent2)let \(propertyName) = \(propertyName)JSONArray.map({ \(s.typeName)(json: $0) }).flatMap({ $0 })")
+                case let .enum(e):
+                    lines.append("\(indent2)guard let \(propertyName)RawValues = json[\"\($0.name)\"] as? [\(e.primitive.name)] else { return nil }")
+                    lines.append("\(indent2)let \(propertyName) = \(propertyName)RawValues.map({ \(e.typeName)(rawValue: $0) }).flatMap({ $0 })")
+                }
+            }
+        }
+        let arguments = properties.map({
+            $0.name.propertyName(meta: meta)
+        }).map({
+            "\($0): \($0)"
+        }).joined(separator: ", ")
+        lines.append("\(indent2)init(\(arguments))")
+        lines.append("\(indent1)}")
+        return lines.joined(separator: "\n")
+    }
+
     func definition(indentation: Indentation, meta: Meta) -> String {
         let indent = indentation.value
         var lines: [String] = []
@@ -379,6 +433,7 @@ extension Struct {
             }
         } else {
             lines.append(designatedInitializer(indentation: indentation, meta: meta))
+            lines.append(failableInitializer(indentation: indentation, meta: meta))
         }
         lines.append("\(indent)}")
         return lines.joined(separator: "\n")
