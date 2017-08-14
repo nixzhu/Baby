@@ -370,7 +370,19 @@ extension Struct {
             case .normal:
                 switch $0.type.plainType {
                 case let .primitive(p):
-                    lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] as? \(p.name) else { return nil }")
+                    switch p {
+                    case .bool, .int, .double, .string:
+                        lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] as? \(p.name) else { return nil }")
+                    case .url:
+                        lines.append("\(indent2)guard let \(propertyName)String = json[\"\($0.name)\"] as? String else { return nil }")
+                        lines.append("\(indent2)guard let \(propertyName) = URL(string: \(propertyName)String) else { return nil }")
+                    case .date:
+                        break
+                    case .any:
+                        break
+                    case .null:
+                        break
+                    }
                 case let .struct(s):
                     lines.append("\(indent2)guard let \(propertyName)JSONDictionary = json[\"\($0.name)\"] as? \(meta.jsonDictionaryName) else { return nil }")
                     lines.append("\(indent2)guard let \(propertyName) = \(s.typeName)(json: \(propertyName)JSONDictionary) else { return nil }")
