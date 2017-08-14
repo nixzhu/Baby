@@ -363,7 +363,7 @@ extension Struct {
         let indent1 = indentation.deeper.value
         let indent2 = indentation.deeper.deeper.value
         var lines: [String] = []
-        lines.append("\(indent1)\(meta.publicCode)init?(json: \(meta.jsonDictionaryName)) {")
+        lines.append("\(indent1)\(meta.publicCode) init?(json: \(meta.jsonDictionaryName)) {")
         properties.forEach {
             let propertyName = $0.name.propertyName(meta: meta)
             switch $0.type.status {
@@ -392,9 +392,9 @@ extension Struct {
                             lines.append("\(indent2)let \(propertyName) = Date(timeIntervalSince1970: \(dateTimeInterval))")
                         }
                     case .any:
-                        lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"]")
+                        lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] else { return nil }")
                     case .null:
-                        assertionFailure("No null for normal")
+                        assertionFailure("null for normal")
                         break
                     }
                 case let .struct(s):
@@ -407,7 +407,33 @@ extension Struct {
             case .isOptional:
                 switch $0.type.plainType {
                 case let .primitive(p):
-                    lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"] as? \(p.name)")
+                    switch p {
+                    case .bool, .int, .double, .string:
+                        lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"] as? \(p.name)")
+                    case .url:
+                        lines.append("\(indent2)let \(propertyName)String = json[\"\($0.name)\"] as? String")
+                        lines.append("\(indent2)let \(propertyName) = \(propertyName)String.flatMap({ URL(string: $0) })")
+                    case let .date(type):
+                        switch type {
+                        case .iso8601:
+                            let dateString = "\(propertyName)String"
+                            lines.append("\(indent2)let \(dateString) = json[\"\($0.name)\"] as? String")
+                            lines.append("\(indent2)let \(propertyName) = \(dateString).flatMap({ DateFormatter.iso8601.date(from: $0) })")
+                        case .dateOnly:
+                            let dateString = "\(propertyName)String"
+                            lines.append("\(indent2)let \(dateString) = json[\"\($0.name)\"] as? String")
+                            lines.append("\(indent2)let \(propertyName) = \(dateString).flatMap({ DateFormatter.dateOnly.date(from: $0) })")
+                        case .secondsSince1970:
+                            let dateTimeInterval = "\(propertyName)TimeInterval"
+                            lines.append("\(indent2)let \(dateTimeInterval) = json[\"\($0.name)\"] as? TimeInterval")
+                            lines.append("\(indent2)let \(propertyName) = \(dateTimeInterval).flatMap({ Date(timeIntervalSince1970: $0) })")
+                        }
+                    case .any:
+                        lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"]")
+                    case .null: // TODO: null
+                        assertionFailure("null in isOptional")
+                        break
+                    }
                 case let .struct(s):
                     lines.append("\(indent2)let \(propertyName)JSONDictionary = json[\"\($0.name)\"] as? \(meta.jsonDictionaryName)")
                     lines.append("\(indent2)let \(propertyName) = \(propertyName)JSONDictionary.flatMap({ \(s.typeName)(json: $0) })")
@@ -434,7 +460,7 @@ extension Struct {
         }).map({
             "\($0): \($0)"
         }).joined(separator: ", ")
-        lines.append("\(indent2)init(\(arguments))")
+        lines.append("\(indent2)self.init(\(arguments))")
         lines.append("\(indent1)}")
         return lines.joined(separator: "\n")
     }
