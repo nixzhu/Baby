@@ -431,8 +431,8 @@ extension Struct {
                     case .any:
                         lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"]")
                     case .null: // TODO: null
-                        assertionFailure("null in isOptional")
-                        break
+                        lines.append("\(indent2)let \(propertyName) = json[\"\($0.name)\"] as? \(p.name)")
+                        lines.append("null isOptional")
                     }
                 case let .struct(s):
                     lines.append("\(indent2)let \(propertyName)JSONDictionary = json[\"\($0.name)\"] as? \(meta.jsonDictionaryName)")
@@ -444,8 +444,33 @@ extension Struct {
             case .inArray:
                 switch $0.type.plainType {
                 case let .primitive(p):
-                    lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] as? [\(p.name)] else { return nil }")
-                    break
+                    switch p {
+                    case .bool, .int, .double, .string:
+                        lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] as? [\(p.name)] else { return nil }")
+                    case .url:
+                        lines.append("\(indent2)guard let \(propertyName)Strings = json[\"\($0.name)\"] as? [String] else { return nil }")
+                        lines.append("\(indent2)let \(propertyName) = \(propertyName)Strings.map({ URL(string: $0) }).flatMap({ $0 })")
+                    case let .date(type):
+                        switch type {
+                        case .iso8601:
+                            let dateStrings = "\(propertyName)Strings"
+                            lines.append("\(indent2)guard let \(dateStrings) = json[\"\($0.name)\"] as? [String] else { return nil }")
+                            lines.append("\(indent2)let \(propertyName) = \(dateStrings).flatMap({ DateFormatter.iso8601.date(from: $0) })")
+                        case .dateOnly:
+                            let dateStrings = "\(propertyName)Strings"
+                            lines.append("\(indent2)guard let \(dateStrings) = json[\"\($0.name)\"] as? [String] else { return nil }")
+                            lines.append("\(indent2)let \(propertyName) = \(dateStrings).flatMap({ DateFormatter.dateOnly.date(from: $0) })")
+                        case .secondsSince1970:
+                            let dateTimeIntervals = "\(propertyName)TimeIntervals"
+                            lines.append("\(indent2)guard let \(dateTimeIntervals) = json[\"\($0.name)\"] as? [TimeInterval] else { return nil }")
+                            lines.append("\(indent2)let \(propertyName) = \(dateTimeIntervals).map({ Date(timeIntervalSince1970: $0) })")
+                        }
+                    case .any:
+                        lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] as? [\(p.name)] else { return nil }")
+                    case .null: // TODO: null
+                        lines.append("\(indent2)guard let \(propertyName) = json[\"\($0.name)\"] as? [\(p.name)] else { return nil }")
+                        lines.append("null in array")
+                    }
                 case let .struct(s):
                     lines.append("\(indent2)guard let \(propertyName)JSONArray = json[\"\($0.name)\"] as? [\(meta.jsonDictionaryName)] else { return nil }")
                     lines.append("\(indent2)let \(propertyName) = \(propertyName)JSONArray.map({ \(s.typeName)(json: $0) }).flatMap({ $0 })")
