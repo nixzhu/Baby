@@ -376,9 +376,9 @@ extension String {
         if let name = arrayObjectMap[self] {
             return name
         } else {
-            if hasSuffix("list") {
+            if self.characters.count > 4 && hasSuffix("list") {
                 return String(characters.dropLast(4))
-            } else if hasSuffix("s") {
+            } else if self.characters.count > 1 && hasSuffix("s") {
                 return String(characters.dropLast())
             } else {
                 return self
