@@ -10,7 +10,7 @@ func main(_ arguments: [String]) {
     let arguments = Arguments(arguments)
     let helpOption = Arguments.Option.Mixed(shortKey: "h", longKey: "help")
     func printVersion() {
-        print("Version 0.25.0")
+        print("Version 0.26.0")
         print("Created by nixzhu with love.")
     }
     func printUsage() {
@@ -24,8 +24,9 @@ func main(_ arguments: [String]) {
         print("--codable")
         print("--var")
         print("--json-dictionary-name JSONDictionaryName")
-        print("--property-map \"a: b, c: d\"")
+        print("--property-map \"foo: bar, not_used: _\"")
         print("--array-object-map \"skills: Skill, itemlist: Item\"")
+        print("--property-type-map \"id: UInt64\"")
         print("--enum-properties \"type, gender[male, female, other: unknown]\"")
         print("-h, --help")
         print("-v, --version")
