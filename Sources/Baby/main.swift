@@ -67,23 +67,32 @@ func main(_ arguments: [String]) {
     if let (value, _) = parse(jsonString) {
         let modelNameOption = Arguments.Option.Long(key: "model-name")
         let modelName = arguments.valueOfOption(modelNameOption) ?? "MyModel"
+        let propertyMapOption = Arguments.Option.Long(key: "property-map")
+        let propertyMapString = arguments.valueOfOption(propertyMapOption) ?? ""
+        let propertyMap = map(of: propertyMapString)
         let arrayObjectMapOption = Arguments.Option.Long(key: "array-object-map")
         let arrayObjectMapString = arguments.valueOfOption(arrayObjectMapOption) ?? ""
         let arrayObjectMap = map(of: arrayObjectMapString)
-        let upgradedValue = value.upgraded(newName: modelName, arrayObjectMap: arrayObjectMap)
+        var removedKeySet: Set<String> = []
+        for (key, value) in propertyMap {
+            if value.isEmpty || value == "_" {
+                removedKeySet.insert(key)
+            }
+        }
+        let upgradedValue = value.upgraded(newName: modelName, arrayObjectMap: arrayObjectMap, removedKeySet: removedKeySet)
         let publicOption = Arguments.Option.Long(key: "public")
         let modelTypeOption = Arguments.Option.Long(key: "model-type")
         let codableOption = Arguments.Option.Long(key: "codable")
         let varOption = Arguments.Option.Long(key: "var")
         let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
-        let propertyMapOption = Arguments.Option.Long(key: "property-map")
         let isPublic = arguments.containsOption(publicOption)
         let modelType = arguments.valueOfOption(modelTypeOption) ?? "struct"
         let codable = arguments.containsOption(codableOption)
         let declareVariableProperties = arguments.containsOption(varOption)
         let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
-        let propertyMapString = arguments.valueOfOption(propertyMapOption) ?? ""
-        let propertyMap = map(of: propertyMapString)
+        let propertyTypeMapOption = Arguments.Option.Long(key: "property-type-map")
+        let propertyTypeMapString = arguments.valueOfOption(propertyTypeMapOption) ?? ""
+            let propertyTypeMap = map(of: propertyTypeMapString)
         let enumPropertiesOption = Arguments.Option.Long(key: "enum-properties")
         let enumPropertiesString = arguments.valueOfOption(enumPropertiesOption) ?? ""
         let enumProperties: [Meta.EnumProperty] = list(of: enumPropertiesString).map({ .init(name: $0, cases: $1) })
@@ -95,10 +104,10 @@ func main(_ arguments: [String]) {
             jsonDictionaryName: jsonDictionaryName,
             propertyMap: propertyMap,
             arrayObjectMap: arrayObjectMap,
+            propertyTypeMap: propertyTypeMap, 
             enumProperties: enumProperties
         )
         print(upgradedValue.swiftCode(meta: meta))
-        code(name: "Code", value: upgradedValue, meta: meta)
     } else {
         print("Invalid JSON!")
     }
