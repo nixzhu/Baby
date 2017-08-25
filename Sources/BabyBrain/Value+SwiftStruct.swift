@@ -29,6 +29,7 @@ extension Value {
     private func optionalInitialCodeInArray(indentation: Indentation, meta: Meta, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
+        let selfType = self.type(key: name, meta: meta)
         switch self {
         case .empty:
             lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [Any]")
@@ -38,29 +39,29 @@ extension Value {
                     let propertyName = name.propertyName(meta: meta)
                     let jsonArray = "\(propertyName)JSONArray"
                     lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)?]")
-                    lines.append("\(indent)let \(propertyName) = \(jsonArray).flatMap({ $0.flatMap({ \(name.singularForm(meta: meta).type)(json: $0) }) })")
+                    lines.append("\(indent)let \(propertyName) = \(jsonArray).flatMap({ $0.flatMap({ \(name.type(meta: meta, needSingularForm: true))(json: $0) }) })")
                 } else {
-                    lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)]")
+                    lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(selfType)]")
                 }
             } else {
-                lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)]")
+                lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(selfType)]")
             }
         case .bool:
-            lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)]")
+            lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(selfType)]")
         case .number, .string:
             let propertyType = self.propertyType(key: name, meta: meta)
             switch propertyType {
             case .normal:
                 lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(propertyType.name)]")
             case .enum:
-                lines.append("\(indent)let \(name.propertyName(meta: meta))RawValues = json[\"\(name)\"] as? [\(self.type)]")
+                lines.append("\(indent)let \(name.propertyName(meta: meta))RawValues = json[\"\(name)\"] as? [\(selfType)]")
                 lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(name.propertyName(meta: meta))RawValues.flatMap({ \(propertyType.name.removedQuotationMark())(rawValue: $0) }).flatMap({ $0 })")
             }
-            lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)]")
+            lines.append("\(indent)let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(selfType)]")
         case .object:
             let jsonArray = "\(name.propertyName(meta: meta))JSONArray"
             lines.append("\(indent)let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)]")
-            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).flatMap({ \(name.singularForm(meta: meta).type)(json: $0) }).flatMap({ $0 })")
+            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).flatMap({ \(name.type(meta: meta, needSingularForm: true))(json: $0) }).flatMap({ $0 })")
         case .array:
             lines.append("* Unsupported array in array!")
         case .url:
@@ -89,26 +90,27 @@ extension Value {
     private func optionalInitialCode(indentation: Indentation, meta: Meta, key: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
+        let selfType = self.type(key: key, meta: meta)
         switch self {
         case .empty:
             lines.append("\(indent)let \(key.propertyName(meta: meta)) = json[\"\(key)\"]")
         case .null:
             lines.append("\(indent)let \(key.propertyName(meta: meta)) = json[\"\(key)\"]")
         case .bool:
-            lines.append("\(indent)let \(key.propertyName(meta: meta)) = json[\"\(key)\"] as? \(self.type)")
+            lines.append("\(indent)let \(key.propertyName(meta: meta)) = json[\"\(key)\"] as? \(selfType)")
         case .number, .string:
             let propertyType = self.propertyType(key: key, meta: meta)
             switch propertyType {
             case .normal:
                 lines.append("\(indent)let \(key.propertyName(meta: meta)) = json[\"\(key)\"] as? \(propertyType.name)")
             case .enum:
-                lines.append("\(indent)let \(key.propertyName(meta: meta))RawValue = json[\"\(key)\"] as? \(self.type)")
+                lines.append("\(indent)let \(key.propertyName(meta: meta))RawValue = json[\"\(key)\"] as? \(selfType)")
                 lines.append("\(indent)let \(key.propertyName(meta: meta)) = \(key.propertyName(meta: meta))RawValue.flatMap{( \(propertyType.name.removedQuotationMark())(rawValue: $0) )}")
             }
         case let .object(name, _, _):
             let jsonDictionary = "\(name.propertyName(meta: meta))JSONDictionary"
             lines.append("\(indent)let \(jsonDictionary) = json[\"\(name)\"] as? \(meta.jsonDictionaryName)")
-            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonDictionary).flatMap({ \(name.type)(json: $0) })")
+            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonDictionary).flatMap({ \(name.type(meta: meta))(json: $0) })")
         case let .array(name, values):
             if let value = values.first {
                 lines.append(value.optionalInitialCodeInArray(indentation: indentation, meta: meta, name: name))
@@ -141,6 +143,7 @@ extension Value {
     private func initialCodeInArray(indentation: Indentation, meta: Meta, name: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
+        let selfType = self.type(key: name, meta: meta)
         switch self {
         case let .null(optionalValue):
             if let value = optionalValue {
@@ -148,14 +151,14 @@ extension Value {
                     let propertyName = name.propertyName(meta: meta)
                     let jsonArray = "\(propertyName)JSONArray"
                     lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)?] else { return nil }")
-                    lines.append("\(indent)let \(propertyName) = \(jsonArray).map({ $0.flatMap({ \(name.singularForm(meta: meta).type)(json: $0) }) })")
+                    lines.append("\(indent)let \(propertyName) = \(jsonArray).map({ $0.flatMap({ \(name.type(meta: meta, needSingularForm: true))(json: $0) }) })")
                 } else {
                     let propertyType = value.propertyType(key: name, meta: meta)
                     switch propertyType {
                     case .normal:
                         lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(propertyType.name)] else { return nil }")
                     case .enum:
-                        lines.append("\(indent)guard let \(name.propertyName(meta: meta))RawValue = json[\"\(name)\"] as? [\(self.type)])] else { return nil }")
+                        lines.append("\(indent)guard let \(name.propertyName(meta: meta))RawValue = json[\"\(name)\"] as? [\(selfType)])] else { return nil }")
                         lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = \(propertyType.name.removedQuotationMark())(rawValue: \(name.propertyName(meta: meta))RawValue) else { return nil }")
                     }
                 }
@@ -165,25 +168,25 @@ extension Value {
                 case .normal:
                     lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(propertyType.name)] else { return nil }")
                 case .enum:
-                    lines.append("\(indent)guard let \(name.propertyName(meta: meta))RawValue = json[\"\(name)\"] as? [\(self.type)])] else { return nil }")
+                    lines.append("\(indent)guard let \(name.propertyName(meta: meta))RawValue = json[\"\(name)\"] as? [\(selfType)])] else { return nil }")
                     lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = \(propertyType.name.removedQuotationMark())(rawValue: \(name.propertyName(meta: meta))RawValue) else { return nil }")
                 }
             }
         case .empty, .bool:
-            lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
+            lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(selfType)] else { return nil }")
         case .number, .string:
             let propertyType = self.propertyType(key: name, meta: meta, inArray: true)
             switch propertyType {
             case .normal:
                 lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = json[\"\(name)\"] as? [\(propertyType.name)] else { return nil }")
             case .enum:
-                lines.append("\(indent)guard let \(name.propertyName(meta: meta))RawValues = json[\"\(name)\"] as? [\(self.type)] else { return nil }")
+                lines.append("\(indent)guard let \(name.propertyName(meta: meta))RawValues = json[\"\(name)\"] as? [\(selfType)] else { return nil }")
                 lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(name.propertyName(meta: meta))RawValues.map({ \(propertyType.name.removedQuotationMark())(rawValue: $0) }).flatMap({ $0 })")
             }
         case .object:
             let jsonArray = "\(name.propertyName(meta: meta))JSONArray"
             lines.append("\(indent)guard let \(jsonArray) = json[\"\(name)\"] as? [\(meta.jsonDictionaryName)] else { return nil }")
-            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).map({ \(name.singularForm(meta: meta).type)(json: $0) }).flatMap({ $0 })")
+            lines.append("\(indent)let \(name.propertyName(meta: meta)) = \(jsonArray).map({ \(name.type(meta: meta, needSingularForm: true))(json: $0) }).flatMap({ $0 })")
         case .array:
             lines.append("* Unsupported array in array!")
         case .url:
@@ -212,6 +215,7 @@ extension Value {
     private func initialCode(indentation: Indentation, meta: Meta, key: String) -> String {
         let indent = indentation.value
         var lines: [String] = []
+        let selfType = self.type(key: key, meta: meta)
         switch self {
         case .empty:
             lines.append("\(indent)guard let \(key.propertyName(meta: meta)) = json[\"\(key)\"] else { return nil }")
@@ -222,20 +226,20 @@ extension Value {
                 lines.append("\(indent)let \(key.propertyName(meta: meta)) = json[\"\(key)\"]")
             }
         case .bool:
-            lines.append("\(indent)guard let \(key.propertyName(meta: meta)) = json[\"\(key)\"] as? \(self.type) else { return nil }")
+            lines.append("\(indent)guard let \(key.propertyName(meta: meta)) = json[\"\(key)\"] as? \(selfType) else { return nil }")
         case .number, .string:
             let propertyType = self.propertyType(key: key, meta: meta)
             switch propertyType {
             case .normal:
                 lines.append("\(indent)guard let \(key.propertyName(meta: meta)) = json[\"\(key)\"] as? \(propertyType.name) else { return nil }")
             case .enum:
-                lines.append("\(indent)guard let \(key.propertyName(meta: meta))RawValue = json[\"\(key)\"] as? \(self.type) else { return nil }")
+                lines.append("\(indent)guard let \(key.propertyName(meta: meta))RawValue = json[\"\(key)\"] as? \(selfType) else { return nil }")
                 lines.append("\(indent)guard let \(key.propertyName(meta: meta)) = \(propertyType.name.removedQuotationMark())(rawValue: \(key.propertyName(meta: meta))RawValue) else { return nil }")
             }
         case let .object(name, _, _):
             let jsonDictionary = "\(name.propertyName(meta: meta))JSONDictionary"
             lines.append("\(indent)guard let \(jsonDictionary) = json[\"\(name)\"] as? \(meta.jsonDictionaryName) else { return nil }")
-            lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = \(name.type)(json: \(jsonDictionary)) else { return nil }")
+            lines.append("\(indent)guard let \(name.propertyName(meta: meta)) = \(name.type(meta: meta))(json: \(jsonDictionary)) else { return nil }")
         case let .array(name, values):
             if let value = values.first {
                 lines.append(value.initialCodeInArray(indentation: indentation, meta: meta, name: name))
@@ -295,9 +299,9 @@ extension Value {
         case let .object(name, dictionary, keys):
             var lines: [String] = []
             if meta.codable {
-                lines.append("\(indent)\(meta.publicCode)\(meta.modelType) \(name.type): Codable {")
+                lines.append("\(indent)\(meta.publicCode)\(meta.modelType) \(name.type(meta: meta)): Codable {")
             } else {
-                lines.append("\(indent)\(meta.publicCode)\(meta.modelType) \(name.type) {")
+                lines.append("\(indent)\(meta.publicCode)\(meta.modelType) \(name.type(meta: meta)) {")
             }
             for key in keys {
                 let value = dictionary[key]!
@@ -346,7 +350,7 @@ extension Value {
                     lines.append("\(indent1)}")
                     lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(propertyType.propertyType)")
                 } else {
-                    lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type)")
+                    lines.append("\(indent1)\(meta.publicCode)\(meta.declareKeyword) \(key.propertyName(meta: meta)): \(value.type(key: key, meta: meta))")
                 }
             }
             if meta.codable {

@@ -157,7 +157,7 @@ extension Value {
         }
     }
 
-    public func upgraded(newName: String, arrayObjectMap: [String: String] ) -> Value {
+    public func upgraded(newName: String, arrayObjectMap: [String: String], removedKeySet: Set<String>) -> Value {
         switch self {
         case let .number(value):
             switch value {
@@ -184,10 +184,22 @@ extension Value {
             }
         case let .object(_, dictionary, keys):
             var newDictionary: [String: Value] = [:]
-            dictionary.forEach { newDictionary[$0] = $1.upgraded(newName: $0, arrayObjectMap: arrayObjectMap) }
-            return .object(name: newName, dictionary: newDictionary, keys: keys)
+            dictionary.forEach {
+                if !removedKeySet.contains($0) {
+                    newDictionary[$0] = $1.upgraded(newName: $0, arrayObjectMap: arrayObjectMap, removedKeySet: removedKeySet)
+                }
+            }
+            var newKeys: [String] = []
+            for key in keys {
+                if !removedKeySet.contains(key) {
+                    newKeys.append(key)
+                }
+            }
+            return .object(name: newName, dictionary: newDictionary, keys: newKeys)
         case let .array(_, values):
-            let newValues = values.map { $0.upgraded(newName: newName.singularForm(arrayObjectMap: arrayObjectMap), arrayObjectMap: arrayObjectMap) }
+            let newValues = values.map {
+                $0.upgraded(newName: newName.singularForm(arrayObjectMap: arrayObjectMap), arrayObjectMap: arrayObjectMap, removedKeySet: removedKeySet)
+            }
             let value = Value.mergedValue(of: newValues)
             return .array(name: newName, values: [value])
         default:
@@ -197,13 +209,16 @@ extension Value {
 }
 
 extension Value {
-    var type: String {
+    func type(key: String, meta: Meta) -> String {
+        if let type = meta.propertyTypeMap[key] {
+            return type
+        }
         switch self {
         case .empty:
             return "Any"
         case let .null(optionalValue):
             if let value = optionalValue {
-                return value.type + "?"
+                return value.type(key: key, meta: meta) + "?"
             } else {
                 return "Any?"
             }
@@ -219,10 +234,10 @@ extension Value {
         case .string:
             return "String"
         case let .object(name, _, _):
-            return name.type
+            return name.type(meta: meta)
         case let .array(_, values):
             if let value = values.first {
-                return "[" + value.type + "]"
+                return "[" + value.type(key: key, meta: meta) + "]"
             } else {
                 return "[Any]"
             }
@@ -284,7 +299,7 @@ extension Value {
             }
             var name: String
             let propertyType: String
-            let ckey = key.type
+            let ckey = key.type(meta: meta)
             var baseValue: Value?
             switch self {
             case .null(let optionalValue):
@@ -328,7 +343,7 @@ extension Value {
             }
             return .enum(name: name, propertyType: propertyType, rawType: rawType, rawValues: rawValues)
         } else {
-            return .normal(name: type)
+            return .normal(name: type(key: key, meta: meta))
         }
     }
 }
@@ -371,12 +386,21 @@ extension String {
         }
     }
 
-    var type: String { // TODO: better type
+    var detectedType: String {
         return self.replacingOccurrences(of: "-", with: "_")
             .components(separatedBy: "_")
             .map({ $0.capitalizingFirstLetter() })
             .joined()
             .capitalizingFirstLetter()
+    }
+
+    func type(meta: Meta, needSingularForm: Bool = false) -> String { // TODO: better type
+        if let type = meta.propertyTypeMap[self] {
+            return needSingularForm ? type.singularForm(meta: meta) : type
+        } else {
+            let type = detectedType
+            return needSingularForm ? type.singularForm(meta: meta) : type
+        }
     }
 
     func propertyName(meta: Meta) -> String {
@@ -385,7 +409,7 @@ extension String {
         } else if Meta.swiftKeywords.contains(self) {
             return "`\(self)`"
         } else {
-            return type.lowercasingFirstLetter()
+            return detectedType.lowercasingFirstLetter()
         }
     }
 

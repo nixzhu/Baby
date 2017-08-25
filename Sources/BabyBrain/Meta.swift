@@ -11,6 +11,7 @@ public struct Meta {
     let jsonDictionaryName: String
     let propertyMap: [String: String]
     let arrayObjectMap: [String: String]
+    let propertyTypeMap: [String: String]
     public struct EnumProperty {
         public let name: String
         public struct Case {
@@ -71,7 +72,7 @@ public struct Meta {
         return nil
     }
 
-    public init(isPublic: Bool, modelType: String, codable: Bool, declareVariableProperties: Bool, jsonDictionaryName: String, propertyMap: [String: String], arrayObjectMap: [String: String], enumProperties: [EnumProperty]) {
+    public init(isPublic: Bool, modelType: String, codable: Bool, declareVariableProperties: Bool, jsonDictionaryName: String, propertyMap: [String: String], arrayObjectMap: [String: String], propertyTypeMap: [String: String], enumProperties: [EnumProperty]) {
         self.isPublic = isPublic
         self.modelType = modelType
         self.codable = codable
@@ -79,6 +80,7 @@ public struct Meta {
         self.jsonDictionaryName = jsonDictionaryName
         self.propertyMap = propertyMap
         self.arrayObjectMap = arrayObjectMap
+        self.propertyTypeMap = propertyTypeMap
         self.enumProperties = enumProperties
     }
 
@@ -91,6 +93,7 @@ public struct Meta {
             jsonDictionaryName: "[String: Any]",
             propertyMap: [:],
             arrayObjectMap: [:],
+            propertyTypeMap: [:],
             enumProperties: []
         )
     }
