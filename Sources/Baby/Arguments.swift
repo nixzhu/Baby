@@ -6,31 +6,31 @@
 final public class Arguments {
 
     public enum Option: CustomStringConvertible {
-        case Short(key: String)
+        case short(key: String)
         case Long(key: String)
-        case Mixed(shortKey: String, longKey: String)
+        case mixed(shortKey: String, longKey: String)
 
         public var description: String {
             switch self {
-            case .Short(let key):
+            case .short(let key):
                 return "-" + key
-            case .Long(let key):
+            case .long(let key):
                 return "--" + key
-            case .Mixed(let shortKey, let longKey):
+            case .mixed(let shortKey, let longKey):
                 return "-" + shortKey + ", " + "--" + longKey
             }
         }
     }
 
     enum Value {
-        case None
-        case Exist(String)
+        case none
+        case exist(String)
 
         var value: String? {
             switch self {
-            case .None:
+            case .none:
                 return nil
-            case .Exist(let string):
+            case .exist(let string):
                 return string
             }
         }
@@ -51,10 +51,10 @@ final public class Arguments {
             guard let a = _a else { break }
             if a.arguments_isKey {
                 if let b = _b, !b.arguments_isKey {
-                    keyValues[a] = Value.Exist(b)
+                    keyValues[a] = Value.exist(b)
 
                 } else {
-                    keyValues[a] = Value.None
+                    keyValues[a] = Value.none
                 }
             } else {
                 print("Invalid argument: `\(a)`!")
@@ -75,11 +75,11 @@ final public class Arguments {
 
     public func containsOption(_ option: Option) -> Bool {
         switch option {
-        case .Short(let key):
+        case .short(let key):
             return keyValues["-" + key] != nil
-        case .Long(let key):
+        case .long(let key):
             return keyValues["--" + key] != nil
-        case .Mixed(let shortKey, let longKey):
+        case .mixed(let shortKey, let longKey):
             return (keyValues["-" + shortKey] != nil) || (keyValues["--" + longKey] != nil)
         }
     }
@@ -90,11 +90,11 @@ final public class Arguments {
 
     public func valueOfOption(_ option: Option) -> String? {
         switch option {
-        case .Short(let key):
+        case .short(let key):
             return keyValues["-" + key]?.value
-        case .Long(let key):
+        case .long(let key):
             return keyValues["--" + key]?.value
-        case .Mixed(let shortKey, let longKey):
+        case .mixed(let shortKey, let longKey):
             let shortKeyValue = keyValues["-" + shortKey]?.value
             let longKeyValue = keyValues["--" + longKey]?.value
             if let shortKeyValue = shortKeyValue, let longKeyValue = longKeyValue {
