@@ -38,7 +38,7 @@ extension Value {
             case .int(let int): return "\(int)"
             case .double(let double): return "\(double)"
             }
-        case .string(let value): return "\"\(value)\""
+        case .string(let value): return "\"\(value.escaped)\""
         case .object(_, let dictionary, let keys):
             var lines: [String] = ["{"]
             let properties = keys.map({ key in
@@ -459,6 +459,15 @@ extension String {
             return .dateOnly
         }
         return nil
+    }
+    var escaped: String {
+        var string = self
+        string = string.replacingOccurrences(of: "\"", with: "\\\"")
+        string = string.replacingOccurrences(of: "\\", with: "\\\\")
+        string = string.replacingOccurrences(of: "\n", with: "\\n")
+        string = string.replacingOccurrences(of: "\r", with: "\\r")
+        string = string.replacingOccurrences(of: "\t", with: "\\t")
+        return string
     }
 }
 

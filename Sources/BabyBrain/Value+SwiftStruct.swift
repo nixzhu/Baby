@@ -327,7 +327,7 @@ extension Value {
                     }
                     if let enumCases = meta.enumCases(key: key) {
                         for enumCase in enumCases {
-                            let caseName = enumCase.name
+                            let caseName = enumCase.name.propertyName(meta: .default)
                             let caseRawValue = enumCase.rawValue ?? enumCase.name
                             appendCase(name: caseName, rawValue: caseRawValue)
                         }
