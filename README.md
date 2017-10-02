@@ -4,7 +4,7 @@ Create models from a JSON file, even a Baby can do it.
 
 ## Description
 
-Baby can detect property's type from json such as `String`, `Int`, `Double`, `URL` and `Date`.
+Baby can infer property's type from json such as `String`, `Int`, `Double`, `URL` and `Date`.
 
 Baby can handle nested json, it will generate nested models.
 
