@@ -387,11 +387,17 @@ extension String {
     }
 
     var detectedType: String {
-        return self.replacingOccurrences(of: "-", with: "_")
+        let string = self
+            .replacingOccurrences(of: "-", with: "_")
             .components(separatedBy: "_")
             .map({ $0.capitalizingFirstLetter() })
             .joined()
             .capitalizingFirstLetter()
+        if isNumber(string) {
+            return "_" + string
+        } else {
+            return string
+        }
     }
 
     func type(meta: Meta, needSingularForm: Bool = false) -> String { // TODO: better type

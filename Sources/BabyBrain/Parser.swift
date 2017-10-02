@@ -267,6 +267,17 @@ public func parse(_ input: String) -> (Value, String)? {
     return (result, String(remainder))
 }
 
+// Number
+
+func isNumber(_ input: String) -> Bool {
+    if let (_, remainder) = number(input.characters) {
+        if remainder.isEmpty {
+            return true
+        }
+    }
+    return false
+}
+
 // Map
 
 private let pair: Parser<(String, String)> = {

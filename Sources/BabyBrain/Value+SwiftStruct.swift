@@ -275,7 +275,13 @@ extension Value {
         var lines: [String] = []
         switch self {
         case let .object(_, dictionary, keys):
-            lines.append("\(indent)\(meta.publicCode)convenience init?(json: \(meta.jsonDictionaryName)) {")
+            let declareInit: String
+            if meta.modelType == "class" {
+                declareInit = "convenience init"
+            } else {
+                declareInit = "init"
+            }
+            lines.append("\(indent)\(meta.publicCode)\(declareInit)?(json: \(meta.jsonDictionaryName)) {")
             for key in keys {
                 let value = dictionary[key]!
                 lines.append(value.initialCode(indentation: indentation.deeper, meta: meta, key: key))
