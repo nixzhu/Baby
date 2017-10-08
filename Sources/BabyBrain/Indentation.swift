@@ -12,7 +12,7 @@ public struct Indentation {
         self.unit = unit
     }
 
-    static var `default`: Indentation {
+    public static var `default`: Indentation {
         return Indentation(level: 0, unit: "    ")
     }
 

@@ -84,7 +84,7 @@ public struct Meta {
         self.enumProperties = enumProperties
     }
 
-    static var `default`: Meta {
+    public static var `default`: Meta {
         return Meta(
             isPublic: false,
             modelType: "struct",

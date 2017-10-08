@@ -1,3 +1,4 @@
+// swift-tools-version:4.0
 
 /*
  * @nixzhu (zhuhongxu@gmail.com)
@@ -7,11 +8,16 @@ import PackageDescription
 
 let package = Package(
     name: "Baby",
+    products: [
+        .executable(
+            name: "baby",
+            targets: ["Baby"])
+    ],
     targets: [
-        Target(
+        .target(
             name: "Baby",
             dependencies: ["BabyBrain"]
         ),
-        Target(name: "BabyBrain")
+        .target(name: "BabyBrain")
     ]
 )
