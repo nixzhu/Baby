@@ -393,7 +393,7 @@ extension String {
             .map({ $0.capitalizingFirstLetter() })
             .joined()
             .capitalizingFirstLetter()
-        if isNumber(string) {
+        if isNumberPrefix(string) {
             return "_" + string
         } else {
             return string
@@ -404,7 +404,10 @@ extension String {
         if let type = meta.propertyTypeMap[self] {
             return needSingularForm ? type.singularForm(meta: meta) : type
         } else {
-            let type = detectedType
+            var type = detectedType
+            if type.hasPrefix("_") {
+                type = "_" + type
+            }
             return needSingularForm ? type.singularForm(meta: meta) : type
         }
     }

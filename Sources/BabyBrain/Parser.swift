@@ -269,13 +269,8 @@ public func parse(_ input: String) -> (Value, String)? {
 
 // Number
 
-func isNumber(_ input: String) -> Bool {
-    if let (_, remainder) = number(Substring(input)) {
-        if remainder.isEmpty {
-            return true
-        }
-    }
-    return false
+func isNumberPrefix(_ input: String) -> Bool {
+    return number(Substring(input)) != nil
 }
 
 // Map
