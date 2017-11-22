@@ -3,7 +3,7 @@
  * @nixzhu (zhuhongxu@gmail.com)
  */
 
-private typealias Stream = String.CharacterView
+private typealias Stream = Substring
 private typealias Parser<A> = (Stream) -> (A, Stream)?
 
 private func map<A, B>(_ parser: @escaping Parser<A>, _ transform: @escaping (A) -> B) -> Parser<B> {
@@ -121,7 +121,7 @@ private func character(_ character: Character) -> Parser<Character> {
 }
 
 private func word(_ string: String) -> Parser<String> {
-    let parsers = string.characters.map({ character($0) })
+    let parsers = string.map({ character($0) })
     return { stream in
         var characters: [Character] = []
         var remainder = stream
@@ -164,8 +164,8 @@ private let bool: Parser<Value> = {
 private let number: Parser<Value> = {
     let optionalSign = optional(character("-"))
     let zero = word("0")
-    let digitOneNine = one(of: "123456789".characters.map({ $0 }).map({ character($0) }))
-    let digit = one(of: "0123456789".characters.map({ $0 }).map({ character($0) }))
+    let digitOneNine = one(of: "123456789".map({ $0 }).map({ character($0) }))
+    let digit = one(of: "0123456789".map({ $0 }).map({ character($0) }))
     let point = character(".")
     let e = or(character("e"), character("E"))
     let optionalPlusMinus = optional(or(character("+"), character("-")))
@@ -204,7 +204,7 @@ private let quotedString: Parser<String> = {
         ]
     )
     let unicodeString: Parser<String> = {
-        let hexDigit = one(of: "0123456789ABCDEFabcdef".characters.map({ character($0) }))
+        let hexDigit = one(of: "0123456789ABCDEFabcdef".map({ character($0) }))
         return { stream in
             guard let (_, remainder1) = character("\\")(stream) else { return nil }
             guard let (_, remainder2) = character("u")(remainder1) else { return nil }
@@ -263,14 +263,14 @@ public func parse(_ input: String) -> (Value, String)? {
     if _value == nil {
         _value = one(of: [null, bool, number, string, array, object])
     }
-    guard let (result, remainder) = value(input.characters) else { return nil }
+    guard let (result, remainder) = value(Substring(input)) else { return nil }
     return (result, String(remainder))
 }
 
 // Number
 
 func isNumber(_ input: String) -> Bool {
-    if let (_, remainder) = number(input.characters) {
+    if let (_, remainder) = number(Substring(input)) {
         if remainder.isEmpty {
             return true
         }
@@ -293,7 +293,7 @@ private let pairs: Parser<[(String, String)]> = {
 }()
 
 public func map(of input: String) -> [String: String] {
-    guard let (result, _) = pairs(input.characters) else { return [:] }
+    guard let (result, _) = pairs(Substring(input)) else { return [:] }
     var map: [String: String] = [:]
     result.forEach { key, value in
         map[key] = value
@@ -323,6 +323,6 @@ public func list(of input: String) -> [(String, [(String, String?)]?)] {
         character("]")
     )
     let _list = list(and(word, optional(cases)), comma)
-    guard let (result, _) = _list(input.characters) else { return [] }
+    guard let (result, _) = _list(Substring(input)) else { return [] }
     return result
 }

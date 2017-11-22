@@ -376,10 +376,10 @@ extension String {
         if let name = arrayObjectMap[self] {
             return name
         } else {
-            if self.characters.count > 4 && hasSuffix("list") {
-                return String(characters.dropLast(4))
-            } else if self.characters.count > 1 && hasSuffix("s") {
-                return String(characters.dropLast())
+            if self.count > 4 && hasSuffix("list") {
+                return String(dropLast(4))
+            } else if self.count > 1 && hasSuffix("s") {
+                return String(dropLast())
             } else {
                 return self
             }
@@ -424,16 +424,16 @@ extension String {
     }
 
     func capitalizingFirstLetter() -> String {
-        if let first = characters.first {
-            return String(first).uppercased() + String(characters.dropFirst())
+        if let first = first {
+            return String(first).uppercased() + String(dropFirst())
         } else {
             return self
         }
     }
 
     func lowercasingFirstLetter() -> String {
-        if let first = characters.first {
-            return String(first).lowercased() + String(characters.dropFirst())
+        if let first = first {
+            return String(first).lowercased() + String(dropFirst())
         } else {
             return self
         }
