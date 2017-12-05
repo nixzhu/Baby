@@ -376,9 +376,9 @@ extension String {
         if let name = arrayObjectMap[self] {
             return name
         } else {
-            if self.characters.count > 4 && hasSuffix("list") {
+            if self.count > 4 && hasSuffix("list") {
                 return String(characters.dropLast(4))
-            } else if self.characters.count > 1 && hasSuffix("s") {
+            } else if self.count > 1 && hasSuffix("s") {
                 return String(characters.dropLast())
             } else {
                 return self
@@ -387,9 +387,8 @@ extension String {
     }
 
     var detectedType: String {
-        let string = self
-            .replacingOccurrences(of: "-", with: "_")
-            .components(separatedBy: "_")
+        let string =
+            self.components(separatedBy: CharacterSet.alphanumerics.inverted)
             .map({ $0.capitalizingFirstLetter() })
             .joined()
             .capitalizingFirstLetter()
