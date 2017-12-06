@@ -387,12 +387,10 @@ extension String {
     }
 
     var detectedType: String {
-        let string = self
-            .replacingOccurrences(of: "-", with: "_")
-            .components(separatedBy: "_")
+        let string =
+            self.components(separatedBy: CharacterSet.alphanumerics.inverted)
             .map({ $0.capitalizingFirstLetter() })
             .joined()
-            .capitalizingFirstLetter()
         if isNumberPrefix(string) {
             return "_" + string
         } else {
