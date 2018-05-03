@@ -125,11 +125,7 @@ Or, buy the [CuteBaby](https://itunes.apple.com/us/app/cutebaby/id1262352477?l=z
 
 ## Contact
 
-You can find me on [Twitter](https://twitter.com/nixzhu) or [Weibo](https://weibo.com/nixzhu).
-
-## Donation
-
-BitCoin: `1EcDVcsQPeg7QVGdCFkQpHXKQMjPJmbixz`
+You can find me on [Twitter](https://twitter.com/nixzhu).
 
 ## License
 
