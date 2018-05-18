@@ -10,7 +10,7 @@ func main(_ arguments: [String]) {
     let arguments = Arguments(arguments)
     let helpOption = Arguments.Option.Mixed(shortKey: "h", longKey: "help")
     func printVersion() {
-        print("Version 0.29.0")
+        print("Version 0.31.0")
         print("Created by nixzhu with love.")
     }
     func printUsage() {
@@ -24,9 +24,10 @@ func main(_ arguments: [String]) {
         print("--codable")
         print("--var")
         print("--json-dictionary-name JSONDictionaryName")
-        print("--property-map \"foo: bar, not_used: _\"")
-        print("--array-object-map \"skills: Skill, itemlist: Item\"")
-        print("--property-type-map \"id: UInt64\"")
+        print("--property-map \"foo: bar, removed: _\"")
+        print("--convert-from-snake-case")
+        print("--array-object-map \"new_skills: Skill\"")
+        print("--property-type-map \"id: UInt64, optional: ?, *: ?\"")
         print("--enum-properties \"type, gender[male, female, other: unknown]\"")
         print("-h, --help")
         print("-v, --version")
@@ -71,7 +72,7 @@ func main(_ arguments: [String]) {
         let propertyMapOption = Arguments.Option.Long(key: "property-map")
         let propertyMapString = arguments.valueOfOption(propertyMapOption) ?? ""
         let propertyMap = map(of: propertyMapString)
-        let useSnakeCaseKeyDecodingStrategyOption = Arguments.Option.Long(key: "snake-case-decoding")
+        let useSnakeCaseKeyDecodingStrategyOption = Arguments.Option.Long(key: "convert-from-snake-case")
         let useSnakeCaseKeyDecodingStrategy = arguments.containsOption(useSnakeCaseKeyDecodingStrategyOption)
         let arrayObjectMapOption = Arguments.Option.Long(key: "array-object-map")
         let arrayObjectMapString = arguments.valueOfOption(arrayObjectMapOption) ?? ""
