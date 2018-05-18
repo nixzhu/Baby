@@ -9,6 +9,7 @@ public struct Meta {
     let codable: Bool
     let declareVariableProperties: Bool
     let jsonDictionaryName: String
+    let useSnakeCaseKeyDecodingStrategy: Bool
     let propertyMap: [String: String]
     let arrayObjectMap: [String: String]
     let propertyTypeMap: [String: String]
@@ -72,12 +73,13 @@ public struct Meta {
         return nil
     }
 
-    public init(isPublic: Bool, modelType: String, codable: Bool, declareVariableProperties: Bool, jsonDictionaryName: String, propertyMap: [String: String], arrayObjectMap: [String: String], propertyTypeMap: [String: String], enumProperties: [EnumProperty]) {
+    public init(isPublic: Bool, modelType: String, codable: Bool, declareVariableProperties: Bool, jsonDictionaryName: String, useSnakeCaseKeyDecodingStrategy: Bool, propertyMap: [String: String], arrayObjectMap: [String: String], propertyTypeMap: [String: String], enumProperties: [EnumProperty]) {
         self.isPublic = isPublic
         self.modelType = modelType
         self.codable = codable
         self.declareVariableProperties = declareVariableProperties
         self.jsonDictionaryName = jsonDictionaryName
+        self.useSnakeCaseKeyDecodingStrategy = useSnakeCaseKeyDecodingStrategy
         self.propertyMap = propertyMap
         self.arrayObjectMap = arrayObjectMap
         self.propertyTypeMap = propertyTypeMap
@@ -91,6 +93,7 @@ public struct Meta {
             codable: false,
             declareVariableProperties: false,
             jsonDictionaryName: "[String: Any]",
+            useSnakeCaseKeyDecodingStrategy: false,
             propertyMap: [:],
             arrayObjectMap: [:],
             propertyTypeMap: [:],

@@ -295,7 +295,7 @@ extension Value {
         return lines.filter({ !$0.isEmpty }).joined(separator: "\n")
     }
 
-    public func swiftCode(indentation: Indentation = Indentation.default, meta: Meta = Meta.default) -> String {
+    public func swiftCode(indentation: Indentation = .default, meta: Meta = .default) -> String {
         let indent = indentation.value
         let indent1 = indentation.deeper.value
         let indent2 = indentation.deeper.deeper.value

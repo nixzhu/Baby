@@ -71,6 +71,8 @@ func main(_ arguments: [String]) {
         let propertyMapOption = Arguments.Option.Long(key: "property-map")
         let propertyMapString = arguments.valueOfOption(propertyMapOption) ?? ""
         let propertyMap = map(of: propertyMapString)
+        let useSnakeCaseKeyDecodingStrategyOption = Arguments.Option.Long(key: "snake-case-decoding")
+        let useSnakeCaseKeyDecodingStrategy = arguments.containsOption(useSnakeCaseKeyDecodingStrategyOption)
         let arrayObjectMapOption = Arguments.Option.Long(key: "array-object-map")
         let arrayObjectMapString = arguments.valueOfOption(arrayObjectMapOption) ?? ""
         let arrayObjectMap = map(of: arrayObjectMapString)
@@ -80,7 +82,26 @@ func main(_ arguments: [String]) {
                 removedKeySet.insert(key)
             }
         }
-        let upgradedValue = value.upgraded(newName: modelName, arrayObjectMap: arrayObjectMap, removedKeySet: removedKeySet)
+        let propertyTypeMapOption = Arguments.Option.Long(key: "property-type-map")
+        let propertyTypeMapString = arguments.valueOfOption(propertyTypeMapOption) ?? ""
+        let propertyTypeMap = map(of: propertyTypeMapString)
+        var isOptionalKeyTypeAll = false
+        var optionalKeySet: Set<String> = []
+        for (key, value) in propertyTypeMap {
+            if value.hasSuffix("?") {
+                optionalKeySet.insert(key)
+            }
+            if key == "*", value == "?" {
+                isOptionalKeyTypeAll = true
+            }
+        }
+        let optionalKeyType: Value.OptionalKeyType = isOptionalKeyTypeAll ? .all : .part(optionalKeySet)
+        let upgradedValue = value.upgraded(
+            newName: modelName, 
+            arrayObjectMap: arrayObjectMap, 
+            removedKeySet: removedKeySet, 
+            optionalKeyType: optionalKeyType
+        )
         let publicOption = Arguments.Option.Long(key: "public")
         let modelTypeOption = Arguments.Option.Long(key: "model-type")
         let codableOption = Arguments.Option.Long(key: "codable")
@@ -91,9 +112,6 @@ func main(_ arguments: [String]) {
         let codable = arguments.containsOption(codableOption)
         let declareVariableProperties = arguments.containsOption(varOption)
         let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption) ?? "[String: Any]"
-        let propertyTypeMapOption = Arguments.Option.Long(key: "property-type-map")
-        let propertyTypeMapString = arguments.valueOfOption(propertyTypeMapOption) ?? ""
-            let propertyTypeMap = map(of: propertyTypeMapString)
         let enumPropertiesOption = Arguments.Option.Long(key: "enum-properties")
         let enumPropertiesString = arguments.valueOfOption(enumPropertiesOption) ?? ""
         let enumProperties: [Meta.EnumProperty] = list(of: enumPropertiesString).map({ .init(name: $0, cases: $1) })
@@ -103,12 +121,21 @@ func main(_ arguments: [String]) {
             codable: codable,
             declareVariableProperties: declareVariableProperties,
             jsonDictionaryName: jsonDictionaryName,
+            useSnakeCaseKeyDecodingStrategy: useSnakeCaseKeyDecodingStrategy,
             propertyMap: propertyMap,
             arrayObjectMap: arrayObjectMap,
             propertyTypeMap: propertyTypeMap, 
             enumProperties: enumProperties
         )
-        print(upgradedValue.swiftCode(meta: meta))
+        if codable {
+            if let swiftCode = code(name: modelType, value: upgradedValue, meta: meta) {
+                print(swiftCode)
+            } else {
+                print("Invalid JSON!")
+            }
+        } else {
+           print(upgradedValue.swiftCode(meta: meta))
+        }
     } else {
         print("Invalid JSON!")
     }

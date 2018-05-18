@@ -157,7 +157,11 @@ extension Value {
         }
     }
 
-    public func upgraded(newName: String, arrayObjectMap: [String: String], removedKeySet: Set<String>) -> Value {
+    public enum OptionalKeyType {
+        case part(Set<String>)
+        case all
+    }
+    public func upgraded(newName: String, arrayObjectMap: [String: String], removedKeySet: Set<String>, optionalKeyType: OptionalKeyType) -> Value {
         switch self {
         case let .number(value):
             switch value {
@@ -183,12 +187,30 @@ extension Value {
                 return self
             }
         case let .object(_, dictionary, keys):
-            var newDictionary: [String: Value] = [:]
-            dictionary.forEach {
-                if !removedKeySet.contains($0) {
-                    newDictionary[$0] = $1.upgraded(newName: $0, arrayObjectMap: arrayObjectMap, removedKeySet: removedKeySet)
+            var removedKeyDictionary: [String: Value] = [:]
+            dictionary.forEach { key, value in
+                if !removedKeySet.contains(key) {
+                    removedKeyDictionary[key] = value.upgraded(newName: key, arrayObjectMap: arrayObjectMap, removedKeySet: removedKeySet, optionalKeyType: optionalKeyType)
                 }
             }
+            var optionalKeyDictionary = removedKeyDictionary
+            switch optionalKeyType {
+            case let .part(optionalKeySet):
+                removedKeyDictionary.forEach { key, value in
+                    if optionalKeySet.contains(key) {
+                        if !value.isNull {
+                            optionalKeyDictionary[key] = .null(optionalValue: value)
+                        }
+                    }
+                }
+            case .all:
+                removedKeyDictionary.forEach { key, value in
+                    if !value.isNull {
+                        optionalKeyDictionary[key] = .null(optionalValue: value)
+                    }
+                }
+            }
+            let newDictionary = optionalKeyDictionary
             var newKeys: [String] = []
             for key in keys {
                 if !removedKeySet.contains(key) {
@@ -198,7 +220,7 @@ extension Value {
             return .object(name: newName, dictionary: newDictionary, keys: newKeys)
         case let .array(_, values):
             let newValues = values.map {
-                $0.upgraded(newName: newName.singularForm(arrayObjectMap: arrayObjectMap), arrayObjectMap: arrayObjectMap, removedKeySet: removedKeySet)
+                $0.upgraded(newName: newName.singularForm(arrayObjectMap: arrayObjectMap), arrayObjectMap: arrayObjectMap, removedKeySet: removedKeySet, optionalKeyType: optionalKeyType)
             }
             let value = Value.mergedValue(of: newValues)
             return .array(name: newName, values: [value])
@@ -387,8 +409,8 @@ extension String {
     }
 
     var detectedType: String {
-        let string =
-            self.components(separatedBy: CharacterSet.alphanumerics.inverted)
+        let string = self
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
             .map({ $0.capitalizingFirstLetter() })
             .joined()
         if isNumberPrefix(string) {
@@ -396,6 +418,10 @@ extension String {
         } else {
             return string
         }
+    }
+
+    var camelCased: String {
+        return detectedType.lowercasingFirstLetter()
     }
 
     func type(meta: Meta, needSingularForm: Bool = false) -> String { // TODO: better type
@@ -410,13 +436,33 @@ extension String {
         }
     }
 
-    func propertyName(meta: Meta) -> String {
-        if let propertyName = meta.propertyMap[self] {
-            return propertyName
-        } else if Meta.swiftKeywords.contains(self) {
+    var quotedIfNeed: String {
+        if Meta.swiftKeywords.contains(self) {
             return "`\(self)`"
         } else {
-            return detectedType.lowercasingFirstLetter()
+            return self
+        }
+    }
+
+    func propertyName(meta: Meta) -> String {
+        if meta.useSnakeCaseKeyDecodingStrategy {
+            return camelCased
+        } else {
+            if let propertyName = meta.propertyMap[self] {
+                if propertyName.hasSuffix("?") {
+                    if propertyName.count == 1 {
+                        return self
+                    } else {
+                        return String(propertyName.dropLast())
+                    }
+                } else {
+                    return propertyName
+                }
+            } else if Meta.swiftKeywords.contains(self) {
+                return "`\(self)`"
+            } else {
+                return detectedType.lowercasingFirstLetter()
+            }
         }
     }
 
