@@ -311,7 +311,11 @@ extension Property {
 
     func typeName(meta: Meta) -> String {
         if let type = meta.propertyTypeMap[name] {
-            return type
+            if type == "?" {
+                return self.type.name(meta: meta)
+            } else {
+                return type
+            }
         } else {
             return type.name(meta: meta)
         }
