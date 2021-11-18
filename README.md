@@ -121,7 +121,7 @@ $ baby --help
 
 Try Baby's web interface [SharedBaby](https://github.com/nixzhu/SharedBaby) if you like.
 
-Get the [CuteBaby](https://itunes.apple.com/us/app/cutebaby/id1262352477?mt=12) or [SmartBaby](https://itunes.apple.com/us/app/smartbaby/id1438971945?mt=12) on the Mac App Store.
+Get [Ducky](https://apps.apple.com/cn/app/ducky-model-editor/id1525505933) in the Mac App Store.
 
 ## Contact
 
